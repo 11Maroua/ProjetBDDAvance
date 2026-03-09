@@ -9,6 +9,7 @@ pip install requests pandas
 python3 src/scripts_recup_donnees/download_accidents_fr.py
 python3 src/scripts_recup_donnees/download_accidents_uk.py
 python3 src/scripts_recup_donnees/download_meteo_fr.py
+python3 src/scripts_recup_donnees/download_meteo_uk.py
 ```
 
 Les donnees seront dans data/raw/.
