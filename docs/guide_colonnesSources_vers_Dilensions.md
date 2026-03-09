@@ -1,4 +1,4 @@
-#Guide du passage des colonnes des données SOURCES vers les colonnes des données DIMENSIONS
+# Guide du passage des colonnes des données SOURCES vers les colonnes des données DIMENSIONS
 
 ## Comment utiliser ce document
 
