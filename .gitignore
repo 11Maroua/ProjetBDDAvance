@@ -1,0 +1,20 @@
+# Les données sont trop volumineuses, il vaut ieux lancer les scripts de téléchargement et de traitement des données pour les récupérer directement depuis les sources
+data/raw/
+
+# Fichiers Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.env
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Mac
+.DS_Store
+
+# Environnements virtuels
+venv/
+env/
+python_env_global/
+
