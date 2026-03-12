@@ -15,7 +15,11 @@ def normaliser_type(nom):
         return "caracteristiques"
     if "lieu" in nom:
         return "lieux"
-    if "vehic" in nom:
+    if "vehic" and "imm" in nom:
+        return "vehicules_immatricules"
+    if "vehicules_" in nom: 
+        return "vehicules"
+    if "vehicules-2" in nom: 
         return "vehicules"
     if "usag" in nom:
         return "usagers"

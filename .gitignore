@@ -1,5 +1,6 @@
 # Les données sont trop volumineuses, il vaut mieux lancer les scripts de téléchargement et de traitement des données pour les récupérer directement depuis les sources
 data/raw/
+data/combined/
 
 # Fichiers Python
 __pycache__/
