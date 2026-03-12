@@ -18,3 +18,4 @@ venv/
 env/
 python_env_global/
 
+data/processed/dim_localisation_uk.csv
