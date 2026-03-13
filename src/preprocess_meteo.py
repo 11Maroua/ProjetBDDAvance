@@ -32,15 +32,12 @@ def trouver_colonne(df, candidats, obligatoire=True):
 def normaliser_date(serie):
     s = serie.astype(str).str.strip()
 
-    # cas 20050115
     d1 = pd.to_datetime(s, format="%Y%m%d", errors="coerce")
 
-    # cas 2005-01-15
     masque = d1.isna()
     if masque.any():
         d1.loc[masque] = pd.to_datetime(s[masque], format="%Y-%m-%d", errors="coerce")
 
-    # fallback général
     masque = d1.isna()
     if masque.any():
         d1.loc[masque] = pd.to_datetime(s[masque], errors="coerce")
@@ -69,7 +66,7 @@ def construire_conditions(tmin, tmax, precip, vent):
             else:
                 conditions.append("pluie")
         elif pd.notna(v) and v >= 40:
-            conditions.append("brouillard")
+            conditions.append("vent_fort")
         elif pd.notna(tm) and tm >= 20:
             conditions.append("ensoleille")
         else:
@@ -88,7 +85,6 @@ def preprocess_fr():
     for fichier in fichiers:
         print(f"[FR] Lecture : {fichier}")
 
-        # lecture robuste : essayer ; puis , puis fallback
         try:
             df = pd.read_csv(fichier, sep=";", low_memory=False)
             if len(df.columns) == 1:
@@ -98,58 +94,51 @@ def preprocess_fr():
 
         print("[FR] Colonnes détectées :", list(df.columns))
 
-        # colonnes spécifiques SIM
-        col_date = trouver_colonne(df, ["DATE", "AAAAMMJJ", "date"])
-        col_lambx = trouver_colonne(df, ["LAMBX", "lambx"], obligatoire=False)
-        col_lamby = trouver_colonne(df, ["LAMBY", "lamby"], obligatoire=False)
-
-        # température
-        col_t = trouver_colonne(df, ["T", "temp", "temperature"], obligatoire=False)
-
-        # vent
-        col_vent = trouver_colonne(df, ["FF", "vent", "wind"], obligatoire=False)
-
-        # précipitations = liquide + neige
+        col_date   = trouver_colonne(df, ["DATE", "AAAAMMJJ", "date"])
+        col_t      = trouver_colonne(df, ["T", "temp", "temperature"], obligatoire=False)
+        col_tmin   = trouver_colonne(df, ["TINF_H"], obligatoire=False)
+        col_tmax   = trouver_colonne(df, ["TSUP_H"], obligatoire=False)
+        col_vent   = trouver_colonne(df, ["FF", "vent", "wind"], obligatoire=False)
         col_preliq = trouver_colonne(df, ["PRELIQ", "preliq"], obligatoire=False)
-        col_prenei = trouver_colonne(df, ["PRENEI", "preneur", "prenei"], obligatoire=False)
+        col_prenei = trouver_colonne(df, ["PRENEI", "prenei"], obligatoire=False)
 
-        if col_t is None:
+        if col_t is None and col_tmin is None:
             raise ValueError(f"[FR] Température introuvable dans {fichier}")
 
         dates = normaliser_date(df[col_date])
 
-        precip_liq = pd.to_numeric(df[col_preliq], errors="coerce") if col_preliq else 0
-        precip_nei = pd.to_numeric(df[col_prenei], errors="coerce") if col_prenei else 0
+        precip_liq   = pd.to_numeric(df[col_preliq], errors="coerce") if col_preliq else 0
+        precip_nei   = pd.to_numeric(df[col_prenei], errors="coerce") if col_prenei else 0
         precip_total = precip_liq + precip_nei
 
-        # Comme SIM est par grille, on crée un identifiant de zone à partir des coordonnées
-        if col_lambx and col_lamby:
-            region_series = (
-                df[col_lambx].astype(str).str.strip() + "_" + df[col_lamby].astype(str).str.strip()
-            )
-        else:
-            region_series = "FR_ZONE_INCONNUE"
+        t_min_serie = (
+            pd.to_numeric(df[col_tmin], errors="coerce") if col_tmin
+            else pd.to_numeric(df[col_t], errors="coerce")
+        )
+        t_max_serie = (
+            pd.to_numeric(df[col_tmax], errors="coerce") if col_tmax
+            else pd.to_numeric(df[col_t], errors="coerce")
+        )
 
         out = pd.DataFrame({
-            "date": dates.dt.date,
-            "region": region_series,
-            "T_min": pd.to_numeric(df[col_t], errors="coerce"),
-            "T_max": pd.to_numeric(df[col_t], errors="coerce"),
-            "precipitations": precip_total,
-            "vent": pd.to_numeric(df[col_vent], errors="coerce") if col_vent else pd.NA,
+            "date":            dates.dt.date,
+            "T_min":           t_min_serie,
+            "T_max":           t_max_serie,
+            "precipitations":  precip_total,
+            "vent":            pd.to_numeric(df[col_vent], errors="coerce") if col_vent else pd.NA,
         })
 
-        out = out.dropna(subset=["date", "region"])
+        out = out.dropna(subset=["date"])
         out = out[out["date"].apply(lambda d: d.year in ANNEES_CIBLES)]
 
-        # Agrégation région / jour
+        # Agrégation nationale par jour (moyenne de tous les points de grille)
         out = (
-            out.groupby(["date", "region"], as_index=False)
+            out.groupby("date", as_index=False)
             .agg({
-                "T_min": "mean",
-                "T_max": "mean",
+                "T_min":          "mean",
+                "T_max":          "mean",
                 "precipitations": "mean",
-                "vent": "mean",
+                "vent":           "mean",
             })
         )
 
@@ -178,10 +167,10 @@ def preprocess_uk():
 
         print("[UK] Colonnes détectées :", list(df.columns))
 
-        col_date = trouver_colonne(df, ["date"])
-        col_temp = trouver_colonne(df, ["temp", "temperature"], obligatoire=False)
+        col_date   = trouver_colonne(df, ["date"])
+        col_temp   = trouver_colonne(df, ["temp", "temperature"], obligatoire=False)
         col_precip = trouver_colonne(df, ["precipitation", "precip", "rainfall", "rain"], obligatoire=False)
-        col_vent = trouver_colonne(df, ["wind_speed", "windspeed", "wind"], obligatoire=False)
+        col_vent   = trouver_colonne(df, ["wind_speed", "windspeed", "wind"], obligatoire=False)
 
         if col_temp is None or col_precip is None:
             raise ValueError(
@@ -192,25 +181,23 @@ def preprocess_uk():
         dates = normaliser_date(df[col_date])
 
         out = pd.DataFrame({
-            "date": dates.dt.date,
-            "region": "UK_GLOBAL",
-            "T_min": pd.to_numeric(df[col_temp], errors="coerce"),
-            "T_max": pd.to_numeric(df[col_temp], errors="coerce"),
+            "date":           dates.dt.date,
+            "T_min":          pd.to_numeric(df[col_temp], errors="coerce"),
+            "T_max":          pd.to_numeric(df[col_temp], errors="coerce"),
             "precipitations": pd.to_numeric(df[col_precip], errors="coerce"),
-            "vent": pd.to_numeric(df[col_vent], errors="coerce") if col_vent else pd.NA,
+            "vent":           pd.to_numeric(df[col_vent], errors="coerce") if col_vent else pd.NA,
         })
 
         out = out.dropna(subset=["date"])
         out = out[out["date"].apply(lambda d: d.year in ANNEES_CIBLES)]
 
-        # Agrégation région / jour
         out = (
-            out.groupby(["date", "region"], as_index=False)
+            out.groupby("date", as_index=False)
             .agg({
-                "T_min": "mean",
-                "T_max": "mean",
+                "T_min":          "mean",
+                "T_max":          "mean",
                 "precipitations": "mean",
-                "vent": "mean",
+                "vent":           "mean",
             })
         )
 
@@ -225,41 +212,36 @@ def preprocess_uk():
 
     return uk
 
+
 def nettoyer_final(df):
     df = df.copy()
 
-    # Valeurs manquantes
     df["precipitations"] = df["precipitations"].fillna(0)
     if df["vent"].dropna().empty:
         df["vent"] = 0
     else:
         df["vent"] = df["vent"].fillna(df["vent"].median())
 
-    # Doublons
-    df = df.drop_duplicates(subset=["date", "region", "id_pays"])
+    df = df.drop_duplicates(subset=["date", "id_pays"])
 
-    # Clé surrogate
-    df = df.sort_values(["id_pays", "region", "date"]).reset_index(drop=True)
+    df = df.sort_values(["id_pays", "date"]).reset_index(drop=True)
     df["id_meteo"] = range(1, len(df) + 1)
 
-    # Ordre final
-    df = df[
-        ["id_meteo", "date", "region", "T_min", "T_max", "precipitations", "vent", "conditions", "id_pays"]
-    ]
+    df = df[["id_meteo", "date", "T_min", "T_max", "precipitations", "vent", "conditions", "id_pays"]]
 
     return df
 
 
 def verifier_jointure(df):
-    print("\n[CHECK] Exemple de clés de jointure (date, region, id_pays) :")
-    print(df[["date", "region", "id_pays"]].head(10))
+    print("\n[CHECK] Exemple de clés de jointure (date, id_pays) :")
+    print(df[["date", "id_pays"]].head(10))
 
-    nb_doublons = df.duplicated(["date", "region", "id_pays"]).sum()
+    nb_doublons = df.duplicated(["date", "id_pays"]).sum()
     print(f"\n[CHECK] Nombre de lignes : {len(df)}")
-    print(f"[CHECK] Doublons sur (date, region, id_pays) : {nb_doublons}")
+    print(f"[CHECK] Doublons sur (date, id_pays) : {nb_doublons}")
 
     if nb_doublons == 0:
-        print("[CHECK] Jointure possible avec les accidents via (date, region, id_pays)")
+        print("[CHECK] Jointure possible avec les accidents via (date, id_pays)")
     else:
         print("[CHECK] Attention : il reste des doublons pour la jointure")
 
