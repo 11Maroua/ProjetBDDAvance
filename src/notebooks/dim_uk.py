@@ -86,9 +86,9 @@ def process_chunks(csv_path, usecols, transform_fn, dedup_cols, label):
 def transform_localisation(c):
     c["type_route"]     = c["first_road_class"].map(ROAD_CLASS_MAP).fillna("Unknown")
     c["vitesse_limite"] = pd.to_numeric(c["speed_limit"], errors="coerce").replace(-1, pd.NA)
-    c["commune"]        = c["local_authority_ons_district"].astype(str)
+    c["commune"]        = "N/A"
     c["departement"]    = "N/A"
-    c["region"]         = "N/A"
+    c["district"]       = c["local_authority_ons_district"].astype(str)
     c["id_pays"]        = ID_PAYS
     c["latitude"]       = c["latitude"].round(4)
     c["longitude"]      = c["longitude"].round(4)
@@ -98,11 +98,11 @@ dim_loc = process_chunks(
     COLLISION_CSV,
     ["longitude", "latitude", "first_road_class", "speed_limit", "local_authority_ons_district"],
     transform_localisation,
-    ["id_pays", "commune", "departement", "region", "type_route", "vitesse_limite", "latitude", "longitude"],
+    ["id_pays", "commune", "departement", "district", "type_route", "vitesse_limite", "latitude", "longitude"],
     "DIM_LOCALISATION"
 )
 dim_loc.insert(0, "id_lieu", range(1, len(dim_loc) + 1))
-dim_loc[["id_lieu","id_pays","commune","departement","region",
+dim_loc[["id_lieu","id_pays","commune","departement","district",
          "type_route","vitesse_limite","latitude","longitude"]].to_csv("dim_localisation.csv", index=False)
 print("  Saved -> dim_localisation.csv")
 
