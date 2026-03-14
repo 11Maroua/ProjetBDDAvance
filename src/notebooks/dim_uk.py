@@ -8,7 +8,7 @@ Build 3 dimension tables from UK accidents CSVs:
 import pandas as pd
 
 CHUNK_SIZE = 100_000
-ID_PAYS    = 826  # ISO 3166-1 numeric for United Kingdom
+ID_PAYS    = 2
 
 BASE = "data/raw/accidents_uk"
 COLLISION_CSV = f"{BASE}/dft-road-casualty-statistics-collision-1979-latest-published-year.csv"
@@ -48,7 +48,7 @@ PROPULSION_MAP = {
     11: "Fuel cells", 12: "Electric diesel", -1: "Unknown", 0: "Unknown",
 }
 CASUALTY_CLASS_MAP = {1: "Driver or rider", 2: "Passenger", 3: "Pedestrian", -1: "Unknown"}
-SEX_MAP            = {1: "Male", 2: "Female", -1: "Unknown", 9: "Unknown"}
+SEX_MAP            = {1: "Male", 2: "Female"}
 SEVERITY_MAP       = {1: "Fatal", 2: "Serious", 3: "Slight", -1: "Unknown"}
 CAR_PASSENGER_MAP  = {0: "Not car passenger", 1: "Front seat", 2: "Rear seat", -1: "Unknown"}
 BUS_PASSENGER_MAP  = {0: "Not bus passenger", 1: "Boarding/alighting",
@@ -103,8 +103,8 @@ dim_loc = process_chunks(
 )
 dim_loc.insert(0, "id_lieu", range(1, len(dim_loc) + 1))
 dim_loc[["id_lieu","id_pays","commune","departement","district",
-         "type_route","vitesse_limite","latitude","longitude"]].to_csv("dim_localisation.csv", index=False)
-print("  Saved -> dim_localisation.csv")
+         "type_route","vitesse_limite","latitude","longitude"]].to_csv("../../data/processed/dim_localisation_uk.csv", index=False)
+print("  Saved -> ../../data/processed/dim_localisation_uk.csv")
 
 
 # ── 2. DIM_VEHICULE ────────────────────────────────────────────────────────────
@@ -126,8 +126,8 @@ dim_veh = process_chunks(
 )
 dim_veh.insert(0, "id_vehicule", range(1, len(dim_veh) + 1))
 dim_veh[["id_vehicule","id_pays","type_vehicule","manoeuvre",
-         "nb_occupants","motorisation"]].to_csv("dim_vehicule.csv", index=False)
-print("  Saved -> dim_vehicule.csv")
+         "nb_occupants","motorisation"]].to_csv("../../data/processed/dim_vehicule_uk.csv", index=False)
+print("  Saved -> ../../data/processed/dim_vehicule_uk.csv")
 
 
 # ── 3. DIM_USAGER ──────────────────────────────────────────────────────────────
@@ -159,7 +159,7 @@ dim_usg = process_chunks(
 )
 dim_usg.insert(0, "id_usager", range(1, len(dim_usg) + 1))
 dim_usg[["id_usager","id_pays","age","sexe",
-         "place_vehicule","gravite","cat_usager"]].to_csv("dim_usager.csv", index=False)
-print("  Saved -> dim_usager.csv")
+         "place_vehicule","gravite","cat_usager"]].to_csv("../../data/processed/dim_usager_uk.csv", index=False)
+print("  Saved -> ../../data/processed/dim_usager_uk.csv")
 
 print("\nAll 3 dimensions built successfully.")
