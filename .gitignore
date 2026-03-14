@@ -20,3 +20,6 @@ env/
 python_env_global/
 
 data/processed/dim_localisation_uk.csv
+data/dims/fait_accident.csv
+data/dims/dim_usager.csv
+data/dims/dim_vehicule.csv
