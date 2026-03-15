@@ -95,7 +95,6 @@ Lit tous les fichiers de `data/raw/` et `data/processed/` et produit dans `data/
 | `dim_vehicule.csv` | Véhicules impliqués |
 | `fait_accident.csv` | Table des faits |
 
-> Durée estimée : 10 à 20 minutes.
 
 ---
 
