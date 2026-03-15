@@ -18,6 +18,11 @@ pip install requests pandas pyproj holidays sqlalchemy psycopg2-binary
 
 
 ---
+## Schéma de l'entrepot
+
+![Schéma étoile](docs/images/schema_etoile.png)
+
+---
 
 ## Sources de données
 
