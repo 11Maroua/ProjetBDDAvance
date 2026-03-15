@@ -1,4 +1,4 @@
-# Entrepôt de données — Accidents de la route et  Météo (France / Royaume-Uni)
+# Entrepôt de données — Accidents de la route et Météo (France / Royaume-Uni)
 
 Projet de bases de données avancées — construction d'un entrepôt de données en schéma étoile croisant les accidents de la route et les données météorologiques en France et au Royaume-Uni sur les années 2005, 2007, 2009, 2011, 2013, 2015, 2017, 2019 et 2021.
 
@@ -78,7 +78,7 @@ Produit `data/processed/dim_meteo.csv` — une ligne par jour par pays.
 
 ---
 
-## Étape 4 — finaliser construction des autres dimensions et la table des faits
+## Étape 4 — Finaliser la construction des autres dimensions et la table des faits
 ```bash
 python3 src/scripts_creation_fact_table/buildfait.py
 ```
@@ -95,6 +95,7 @@ Lit tous les fichiers de `data/raw/` et `data/processed/` et produit dans `data/
 | `dim_vehicule.csv` | Véhicules impliqués |
 | `fait_accident.csv` | Table des faits |
 
+> Durée estimée : 10 à 20 minutes.
 
 ---
 
@@ -122,3 +123,5 @@ python3 src/scripts_creation_fact_table/loaddb.py
 ## Documentation
 
 `docs/guide_colonnesSources_vers_Dimensions.md` — détail du mapping entre les colonnes des fichiers bruts et les colonnes des dimensions, avec les correspondances FR ↔ UK et les points d'attention par champ.
+
+`docs/guide_generation_table_fait.md` — détail du fonctionnement de `buildfait.py` : décodage des codes numériques, conversion des coordonnées, construction des clés surrogates et calcul des mesures de la table des faits.
