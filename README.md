@@ -25,10 +25,8 @@ pip install requests pandas pyproj holidays sqlalchemy psycopg2-binary
 |--------|------|---------|
 | https://www.data.gouv.fr/datasets/donnees-changement-climatique-sim-quotidienne | FR | Licence Ouverte v2.0 |
 | https://www.data.gouv.fr/fr/datasets/bases-de-donnees-annuelles-des-accidents-corporels-de-la-circulation-routiere-annees-de-2005-a-2022 | FR | Licence Ouverte v2.0 |
-|https://www.gov.uk/government/statistical-data-sets/road-safety-open-data 
-| UK | OGL v3.0 |
-| https://www.kaggle.com/datasets/robjbutlermei/uk-daily-weather-1961-2024
- | UK | CC0 |
+|https://www.gov.uk/government/statistical-data-sets/road-safety-open-data | UK | OGL v3.0 |
+| https://www.kaggle.com/datasets/robjbutlermei/uk-daily-weather-1961-2024 | UK | CC0 |
 
 ---
 
