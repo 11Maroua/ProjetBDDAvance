@@ -78,7 +78,7 @@ Produit `data/processed/dim_meteo.csv` — une ligne par jour par pays.
 
 ---
 
-## Étape 4 — Construire les dimensions et la table des faits
+## Étape 4 — finaliser construction des autres dimensions et la table des faits
 ```bash
 python3 src/scripts_creation_fact_table/buildfait.py
 ```
