@@ -1,40 +1,18 @@
 """
-load_db.py
-==========
 Loads all dimension CSVs + fait_accident.csv into PostgreSQL.
 Run this AFTER build_fait.py has generated fait_accident.csv
 and AFTER schema_accidents.sql has been run to create the tables.
-
-Usage:
-  python load_db.py
 """
 
 import pandas as pd
 from sqlalchemy import create_engine, text
 
 # ─────────────────────────────────────────────────────────────
-# CONFIGURATION  ← edit these
+# CONFIGURATION 
 # ─────────────────────────────────────────────────────────────
-DB_URL   = "postgresql://postgres:mypassword@localhost:5432/accidents_db"
-DATA_DIR = "./data/dims"   # output folder from build_dims_and_fait.py
-CHUNKSIZE= 50_000
-
-# ─────────────────────────────────────────────────────────────
-# FILES TO LOAD  (filename, table, id_col for FK offset if paired)
-# ─────────────────────────────────────────────────────────────
-# All files are now in a single folder — no FR/UK split needed
-# IDs are already consistent across countries (built by build_dims_and_fait.py)
-SIMPLE_FILES = [
-    ("dim_pays.csv",        "dim_pays",        None),
-    ("dim_date.csv",        "dim_date",        None),
-    ("dim_meteo.csv",       "dim_meteo",       None),
-    ("dim_localisation.csv","dim_localisation", None),
-    ("dim_usager.csv",      "dim_usager",      None),
-    ("dim_vehicule.csv",    "dim_vehicule",    None),
-    ("fait_accident.csv",   "fait_accident",   None),
-]
-
-PAIRED_FILES = []   # no longer needed — IDs unified during build step
+DB_URL = "postgresql://marouanaitslimani@localhost:5432/accidents_db"
+DATA_DIR = "./data/dims"
+CHUNKSIZE = 50_000
 
 RENAME_MAP = {
     "dim_meteo": {"T_min": "temp_min", "T_max": "temp_max"},
@@ -65,30 +43,23 @@ def clean(chunk):
     return chunk
 
 def transform(chunk, table):
-    # Renames
     if table in RENAME_MAP:
         chunk = chunk.rename(columns=RENAME_MAP[table])
-    # Drop columns
     for col in DROP_COLS.get(table, []):
         chunk = chunk.drop(columns=[col], errors="ignore")
-    # Drop id_meteo from fait_accident — no longer in schema
     if table == "fait_accident":
         chunk = chunk.drop(columns=["id_meteo"], errors="ignore")
-    # Add missing heure
     if table == "dim_date" and "heure" not in chunk.columns:
         chunk["heure"] = None
-    # Boolean casting
     for col in BOOL_COLS.get(table, []):
         if col in chunk.columns:
             chunk[col] = chunk[col].astype(float).astype("boolean")
-    # String casting (for codes like "2B033")
     for col in STR_COLS.get(table, []):
         if col in chunk.columns:
             chunk[col] = chunk[col].astype(str).replace({"nan": None, "None": None})
     return chunk
 
 def detect_params(filepath):
-    """Detect encoding and separator using csv.Sniffer on a larger sample."""
     import csv
     encodings = ("utf-8", "latin-1", "utf-8-sig")
     for encoding in encodings:
@@ -138,27 +109,8 @@ def load_simple(filename, table, engine):
         total += len(chunk)
     print(f"  ✓ {total:,} rows → {table}")
 
-def load_paired(fr_file, uk_file, table, id_col, engine):
-    print(f"\n── {table.upper()}")
-    fr_max = 0
-    total_fr = 0
-
-    for chunk in stream(f"{DATA_DIR}/{fr_file}", table):
-        fr_max    = max(fr_max, int(chunk[id_col].max()))
-        total_fr += len(chunk)
-        write(chunk, table, engine)
-    print(f"    FR: {total_fr:,} rows  (max {id_col} = {fr_max})")
-
-    total_uk = 0
-    for chunk in stream(f"{DATA_DIR}/{uk_file}", table):
-        chunk[id_col] = chunk[id_col] + fr_max
-        total_uk     += len(chunk)
-        write(chunk, table, engine)
-    print(f"    UK: {total_uk:,} rows  (offset +{fr_max})")
-    print(f"  ✓ {total_fr + total_uk:,} total rows → {table}")
-
 # ─────────────────────────────────────────────────────────────
-# MAIN
+# MAIN — dimensions d'abord, fait_accident en dernier
 # ─────────────────────────────────────────────────────────────
 
 def main():
@@ -168,11 +120,16 @@ def main():
         conn.execute(text("SELECT 1"))
     print("✓ Connected\n")
 
-    # Load fait_accident last
-    load_simple("fait_accident.csv", "fait_accident", engine)
+    load_simple("dim_pays.csv",         "dim_pays",         engine)
+    load_simple("dim_date.csv",         "dim_date",         engine)
+    load_simple("dim_meteo.csv",        "dim_meteo",        engine)
+    load_simple("dim_localisation.csv", "dim_localisation", engine)
+    load_simple("dim_usager.csv",       "dim_usager",       engine)
+    load_simple("dim_vehicule.csv",     "dim_vehicule",     engine)
+    load_simple("fait_accident.csv",    "fait_accident",    engine)
 
     print(f"\n{'═'*48}")
-    print("✓ Load complete")
+    print(" Load complete")
 
 if __name__ == "__main__":
     main()

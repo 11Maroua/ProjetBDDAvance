@@ -100,3 +100,6 @@ CREATE TABLE FAIT_ACCIDENT (
     nb_vehicules      INT,
     indice_gravite    FLOAT -- indice_gravite = nb_tues×3 + nb_blesses_graves×2 + nb_blesses_legers×1
 );
+
+
+

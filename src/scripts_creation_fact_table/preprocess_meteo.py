@@ -13,17 +13,14 @@ os.makedirs("data/processed", exist_ok=True)
 
 def trouver_colonne(df, candidats, obligatoire=True):
     cols = {c.lower().strip(): c for c in df.columns}
-
     for cand in candidats:
         if cand.lower() in cols:
             return cols[cand.lower()]
-
     for col in df.columns:
         col_l = col.lower().strip()
         for cand in candidats:
             if cand.lower() in col_l:
                 return col
-
     if obligatoire:
         raise ValueError(f"Colonne introuvable parmi {candidats}. Colonnes disponibles: {list(df.columns)}")
     return None
@@ -31,43 +28,39 @@ def trouver_colonne(df, candidats, obligatoire=True):
 
 def normaliser_date(serie):
     s = serie.astype(str).str.strip()
-
     d1 = pd.to_datetime(s, format="%Y%m%d", errors="coerce")
-
     masque = d1.isna()
     if masque.any():
         d1.loc[masque] = pd.to_datetime(s[masque], format="%Y-%m-%d", errors="coerce")
-
     masque = d1.isna()
     if masque.any():
         d1.loc[masque] = pd.to_datetime(s[masque], errors="coerce")
-
     return d1
 
 
-def construire_conditions(tmin, tmax, precip, vent):
-    tmin = pd.to_numeric(tmin, errors="coerce")
-    tmax = pd.to_numeric(tmax, errors="coerce")
+def construire_conditions(precip, vent, tmax):
+    """
+    4 conditions homogènes FR + UK :
+    - pluie      : précipitations > 0
+    - vent_fort  : vent >= 40 m/s (et pas de précip)
+    - ensoleille : temp max >= 20°C (et pas de précip, pas de vent fort)
+    - nuageux    : tous les autres cas
+    """
     precip = pd.to_numeric(precip, errors="coerce").fillna(0)
-    vent = pd.to_numeric(vent, errors="coerce")
+    vent   = pd.to_numeric(vent,   errors="coerce")
+    tmax   = pd.to_numeric(tmax,   errors="coerce")
 
-    temp_moy = (tmin + tmax) / 2
     conditions = []
-
     for i in range(len(precip)):
         p = precip.iloc[i]
-        tn = tmin.iloc[i]
-        tm = temp_moy.iloc[i]
-        v = vent.iloc[i] if i < len(vent) else None
+        v = vent.iloc[i]
+        tx = tmax.iloc[i]
 
-        if pd.notna(p) and p > 0:
-            if pd.notna(tn) and tn <= 0:
-                conditions.append("neige")
-            else:
-                conditions.append("pluie")
+        if pd.notna(p) and p > 2.0:
+            conditions.append("pluie")
         elif pd.notna(v) and v >= 40:
             conditions.append("vent_fort")
-        elif pd.notna(tm) and tm >= 20:
+        elif pd.notna(tx) and tx >= 20:
             conditions.append("ensoleille")
         else:
             conditions.append("nuageux")
@@ -100,16 +93,15 @@ def preprocess_fr():
         col_tmax   = trouver_colonne(df, ["TSUP_H"], obligatoire=False)
         col_vent   = trouver_colonne(df, ["FF", "vent", "wind"], obligatoire=False)
         col_preliq = trouver_colonne(df, ["PRELIQ", "preliq"], obligatoire=False)
-        col_prenei = trouver_colonne(df, ["PRENEI", "prenei"], obligatoire=False)
 
         if col_t is None and col_tmin is None:
             raise ValueError(f"[FR] Température introuvable dans {fichier}")
 
         dates = normaliser_date(df[col_date])
 
-        precip_liq   = pd.to_numeric(df[col_preliq], errors="coerce") if col_preliq else 0
-        precip_nei   = pd.to_numeric(df[col_prenei], errors="coerce") if col_prenei else 0
-        precip_total = precip_liq + precip_nei
+        # Précipitations : uniquement liquides (PRELIQ) — on ignore PRENEI
+        # car on ne peut pas faire la même chose pour UK
+        precip = pd.to_numeric(df[col_preliq], errors="coerce") if col_preliq else 0
 
         t_min_serie = (
             pd.to_numeric(df[col_tmin], errors="coerce") if col_tmin
@@ -121,17 +113,16 @@ def preprocess_fr():
         )
 
         out = pd.DataFrame({
-            "date":            dates.dt.date,
-            "T_min":           t_min_serie,
-            "T_max":           t_max_serie,
-            "precipitations":  precip_total,
-            "vent":            pd.to_numeric(df[col_vent], errors="coerce") if col_vent else pd.NA,
+            "date":           dates.dt.date,
+            "T_min":          t_min_serie,
+            "T_max":          t_max_serie,
+            "precipitations": precip,
+            "vent":           pd.to_numeric(df[col_vent], errors="coerce") if col_vent else pd.NA,
         })
 
         out = out.dropna(subset=["date"])
         out = out[out["date"].apply(lambda d: d.year in ANNEES_CIBLES)]
 
-        # Agrégation nationale par jour (moyenne de tous les points de grille)
         out = (
             out.groupby("date", as_index=False)
             .agg({
@@ -146,11 +137,7 @@ def preprocess_fr():
         frames.append(out)
 
     fr = pd.concat(frames, ignore_index=True)
-
-    fr["conditions"] = construire_conditions(
-        fr["T_min"], fr["T_max"], fr["precipitations"], fr["vent"]
-    )
-
+    fr["conditions"] = construire_conditions(fr["precipitations"], fr["vent"], fr["T_max"])
     return fr
 
 
@@ -205,41 +192,30 @@ def preprocess_uk():
         frames.append(out)
 
     uk = pd.concat(frames, ignore_index=True)
-
-    uk["conditions"] = construire_conditions(
-        uk["T_min"], uk["T_max"], uk["precipitations"], uk["vent"]
-    )
-
+    uk["conditions"] = construire_conditions(uk["precipitations"], uk["vent"], uk["T_max"])
     return uk
 
 
 def nettoyer_final(df):
     df = df.copy()
-
     df["precipitations"] = df["precipitations"].fillna(0)
     if df["vent"].dropna().empty:
         df["vent"] = 0
     else:
         df["vent"] = df["vent"].fillna(df["vent"].median())
-
     df = df.drop_duplicates(subset=["date", "id_pays"])
-
     df = df.sort_values(["id_pays", "date"]).reset_index(drop=True)
     df["id_meteo"] = range(1, len(df) + 1)
-
     df = df[["id_meteo", "date", "T_min", "T_max", "precipitations", "vent", "conditions", "id_pays"]]
-
     return df
 
 
 def verifier_jointure(df):
     print("\n[CHECK] Exemple de clés de jointure (date, id_pays) :")
     print(df[["date", "id_pays"]].head(10))
-
     nb_doublons = df.duplicated(["date", "id_pays"]).sum()
     print(f"\n[CHECK] Nombre de lignes : {len(df)}")
     print(f"[CHECK] Doublons sur (date, id_pays) : {nb_doublons}")
-
     if nb_doublons == 0:
         print("[CHECK] Jointure possible avec les accidents via (date, id_pays)")
     else:

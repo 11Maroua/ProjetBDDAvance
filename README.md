@@ -119,6 +119,12 @@ python3 src/scripts_creation_fact_table/loaddb.py
 
 ---
 
+## Étape 7 — interroger notre entrepot 
+```bash
+psql -U postgres -d accidents_db 
+```
+---
+
 ## Documentation
 
 `docs/guide_colonnesSources_vers_Dimensions.md` — détail du mapping entre les colonnes des fichiers bruts et les colonnes des dimensions, avec les correspondances FR ↔ UK et les points d'attention par champ.
