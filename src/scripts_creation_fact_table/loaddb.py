@@ -10,7 +10,7 @@ from sqlalchemy import create_engine, text
 # ─────────────────────────────────────────────────────────────
 # CONFIGURATION 
 # ─────────────────────────────────────────────────────────────
-DB_URL = "postgresql://marouanaitslimani@localhost:5432/accidents_db"
+DB_URL = "postgresql://motdepasse@localhost:5432/accidents_db"
 DATA_DIR = "./data/dims"
 CHUNKSIZE = 50_000
 
