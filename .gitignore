@@ -1,8 +1,13 @@
-# Les données sont trop volumineuses, il vaut mieux lancer les scripts de téléchargement et de traitement des données pour les récupérer directement depuis les sources
+# Données brutes (trop volumineuses — relancer les scripts pour les récupérer)
 data/raw/
-data/combined/
 
-# Fichiers Python
+# Fichiers intermédiaires de traitement
+data/processed/
+
+# Dimensions finales et table des faits (trop volumineuses — relancer buildfait.py)
+data/dims/
+
+# Python
 __pycache__/
 *.py[cod]
 *.egg-info/
@@ -18,8 +23,3 @@ __pycache__/
 venv/
 env/
 python_env_global/
-
-data/processed/dim_localisation_uk.csv
-data/dims/fait_accident.csv
-data/dims/dim_usager.csv
-data/dims/dim_vehicule.csv

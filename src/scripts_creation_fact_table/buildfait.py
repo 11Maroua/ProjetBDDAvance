@@ -238,6 +238,7 @@ def process_fr_year(year, meteo_map):
 
     # FR files store year as 2-digit (5 → 2005) or 4-digit (2021)
     # Normalize to full 4-digit year using the known year parameter
+    caract = caract.copy()
     caract["_date"] = (
         str(year) + "-" +
         caract["mois"].astype(str).str.zfill(2) + "-" +
@@ -575,7 +576,7 @@ def main():
         fp(OUTPUT_DIR, "dim_meteo.csv"), index=False)
     print(f"  ✓ Written dim_meteo.csv ({len(meteo):,} rows)")
 
-    # ── Write dim_pays (static)
+    # ── Write dim_pays 
     pd.DataFrame([
         {"id_pays": 1, "code_pays": "FR", "nom_pays": "France"},
         {"id_pays": 2, "code_pays": "UK", "nom_pays": "United Kingdom"},
@@ -583,7 +584,7 @@ def main():
     print("  ✓ Written dim_pays.csv")
 
     print(f"\n{'═'*52}")
-    print(f"✓ All files written to: {OUTPUT_DIR}")
+    print(f" All files written to: {OUTPUT_DIR}")
     print(f"  fait_accident.csv   : {total_fait:,} rows")
     print(f"  id_accident max     : {_counters['id_accident']:,}")
     print(f"  id_lieu max         : {_counters['id_lieu']:,}")
