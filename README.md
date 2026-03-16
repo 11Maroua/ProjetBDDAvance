@@ -128,6 +128,41 @@ python3 src/scripts_creation_fact_table/loaddb.py
 ```bash
 psql -U postgres -d accidents_db 
 ```
+
+## Mise à jour de l'entrepôt
+
+La mise à jour de l'entrepôt suit un processus **incrémental** — on n'insère que les nouveaux enregistrements sans toucher aux données existantes.
+
+### Détection des nouveaux enregistrements
+
+Les clés naturelles des sources permettent de détecter ce qui est nouveau :
+- France : colonne `Num_Acc` dans les fichiers accidents FR
+- Royaume-Uni : colonne `collision_index` dans les fichiers accidents UK
+
+### Procédure
+
+**1. Télécharger les nouvelles données sources**
+```bash
+python3 src/scripts_recup_donnees/download_accidents_fr.py
+python3 src/scripts_recup_donnees/download_accidents_uk.py
+python3 src/scripts_recup_donnees/download_meteo_fr.py
+python3 src/scripts_recup_donnees/download_meteo_uk.py
+```
+
+**2. Regénérer les fichiers CSV**
+```bash
+python3 src/scripts_creation_fact_table/preprocess_meteo.py
+python3 src/scripts_creation_fact_table/buildfait.py
+```
+
+**3. Insérer dans PostgreSQL**
+
+`loaddb.py` utilise `if_exists="append"` — les données existantes ne sont jamais écrasées. Les doublons sont gérés par la contrainte `ON CONFLICT DO NOTHING` sur les clés primaires.
+
+```bash
+python3 src/scripts_creation_fact_table/loaddb.py
+```
+
 ---
 
 ## Documentation
