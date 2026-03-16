@@ -95,8 +95,19 @@ def stream(filepath, table):
         yield transform(clean(chunk), table)
 
 def write(chunk, table, engine):
-    chunk.to_sql(table, engine, if_exists="append", index=False)
-
+    # Récupérer les colonnes
+    cols = list(chunk.columns)
+    col_str = ", ".join(cols)
+    placeholders = ", ".join([f":{c}" for c in cols])
+    
+    sql = text(f"""
+        INSERT INTO {table} ({col_str})
+        VALUES ({placeholders})
+        ON CONFLICT DO NOTHING  -- align with our updating data mart policy
+    """)
+    
+    with engine.begin() as conn:
+        conn.execute(sql, chunk.to_dict(orient="records"))
 # ─────────────────────────────────────────────────────────────
 # LOADERS
 # ─────────────────────────────────────────────────────────────
