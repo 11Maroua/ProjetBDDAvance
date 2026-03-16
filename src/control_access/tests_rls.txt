@@ -1,0 +1,51 @@
+=== TEST ROLE FRANCAIS ===
+Requete : SELECT id_pays, COUNT(*) AS nb_accidents FROM fait_accident GROUP BY id_pays
+SET
+ id_pays | nb_accidents 
+---------+--------------
+       1 |       605369
+(1 row)
+
+
+=== TEST ROLE ANGLAIS ===
+Requete : SELECT id_pays, COUNT(*) AS nb_accidents FROM fait_accident GROUP BY id_pays
+SET
+ id_pays | nb_accidents 
+---------+--------------
+       2 |      1323199
+(1 row)
+
+
+=== TEST ROLE MEDECIN ===
+Requete : SELECT gravite, COUNT(*) AS nb_usagers FROM dim_usager GROUP BY gravite
+SET
+      gravite      | nb_usagers 
+-------------------+------------
+ Killed            |      55111
+ Seriously injured |     490828
+(2 rows)
+
+
+=== TEST ROLE POLICIER ===
+Requete : SELECT COUNT(*) AS nb_vehicules FROM dim_vehicule
+SET
+ nb_vehicules 
+--------------
+      3462921
+(1 row)
+
+
+=== TEST ACCES REFUSE : MEDECIN sur DIM_VEHICULE ===
+Requete : SELECT COUNT(*) FROM dim_vehicule
+SET
+ERROR:  permission denied for table dim_vehicule
+
+=== TEST ACCES REFUSE : FRANCAIS sur donnees UK ===
+Requete : SELECT COUNT(*) FROM fait_accident WHERE id_pays = 2
+SET
+ count 
+-------
+     0
+(1 row)
+
+RESET
