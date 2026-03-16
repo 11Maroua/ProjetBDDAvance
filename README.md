@@ -135,7 +135,7 @@ La mise à jour de l'entrepôt suit un processus **incrémental** — on n'insè
 
 ### Détection des nouveaux enregistrements
 
-Les clés naturelles des sources permettent de détecter ce qui est nouveau :
+Les clés des sources permettent de détecter ce qui est nouveau :
 - France : colonne `Num_Acc` dans les fichiers accidents FR
 - Royaume-Uni : colonne `collision_index` dans les fichiers accidents UK
 
