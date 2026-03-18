@@ -1,0 +1,198 @@
+============================================================
+CRÉATION DE LA VUE MATÉRIALISÉE
+============================================================
+SELECT 1
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+
+============================================================
+SANS VUE — Requête 1
+============================================================
+                                                                                 QUERY PLAN                                                                                  
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Incremental Sort  (cost=35622.36..35800.28 rows=600 width=265) (actual time=659.831..660.740 rows=6 loops=1)
+   Sort Key: p.nom_pays, (round((avg(f.indice_gravite))::numeric, 2)) DESC
+   Presorted Key: p.nom_pays
+   Full-sort Groups: 1  Sort Method: quicksort  Average Memory: 25kB  Peak Memory: 25kB
+   ->  Finalize GroupAggregate  (cost=35621.52..35784.03 rows=600 width=265) (actual time=659.522..660.440 rows=6 loops=1)
+         Group Key: p.nom_pays, m.conditions
+         ->  Gather Merge  (cost=35621.52..35761.53 rows=1200 width=265) (actual time=659.462..660.376 rows=18 loops=1)
+               Workers Planned: 2
+               Workers Launched: 2
+               ->  Sort  (cost=34621.49..34622.99 rows=600 width=265) (actual time=657.037..657.040 rows=6 loops=3)
+                     Sort Key: p.nom_pays, m.conditions
+                     Sort Method: quicksort  Memory: 25kB
+                     Worker 0:  Sort Method: quicksort  Memory: 25kB
+                     Worker 1:  Sort Method: quicksort  Memory: 25kB
+                     ->  Partial HashAggregate  (cost=34587.81..34593.81 rows=600 width=265) (actual time=656.729..656.734 rows=6 loops=3)
+                           Group Key: p.nom_pays, m.conditions
+                           Batches: 1  Memory Usage: 49kB
+                           Worker 0:  Batches: 1  Memory Usage: 49kB
+                           Worker 1:  Batches: 1  Memory Usage: 49kB
+                           ->  Hash Join  (cost=249.55..34530.41 rows=5740 width=233) (actual time=1.944..557.172 rows=642856 loops=3)
+                                 Hash Cond: ((f.id_pays = m.id_pays) AND (f.date = m.date))
+                                 ->  Hash Join  (cost=16.30..30076.74 rows=803605 width=238) (actual time=0.186..474.654 rows=642856 loops=3)
+                                       Hash Cond: (f.id_pays = p.id_pays)
+                                       ->  Parallel Seq Scan on fait_accident f  (cost=0.00..27919.05 rows=803605 width=16) (actual time=0.103..382.572 rows=642856 loops=3)
+                                       ->  Hash  (cost=12.80..12.80 rows=280 width=222) (actual time=0.060..0.061 rows=2 loops=3)
+                                             Buckets: 1024  Batches: 1  Memory Usage: 9kB
+                                             ->  Seq Scan on dim_pays p  (cost=0.00..12.80 rows=280 width=222) (actual time=0.049..0.050 rows=2 loops=3)
+                                 ->  Hash  (cost=134.70..134.70 rows=6570 width=15) (actual time=1.729..1.730 rows=6570 loops=3)
+                                       Buckets: 8192  Batches: 1  Memory Usage: 375kB
+                                       ->  Seq Scan on dim_meteo m  (cost=0.00..134.70 rows=6570 width=15) (actual time=0.024..0.829 rows=6570 loops=3)
+ Planning Time: 0.332 ms
+ Execution Time: 660.789 ms
+(32 rows)
+
+
+============================================================
+AVEC VUE — Requête 1
+============================================================
+                                                               QUERY PLAN                                                               
+----------------------------------------------------------------------------------------------------------------------------------------
+ Incremental Sort  (cost=1.08..1.12 rows=2 width=440) (actual time=0.008..0.008 rows=0 loops=1)
+   Sort Key: nom_pays, (rank() OVER (?))
+   Presorted Key: nom_pays
+   Full-sort Groups: 1  Sort Method: quicksort  Average Memory: 25kB  Peak Memory: 25kB
+   ->  WindowAgg  (cost=1.04..1.07 rows=1 width=440) (actual time=0.004..0.004 rows=0 loops=1)
+         ->  Sort  (cost=1.04..1.05 rows=1 width=400) (actual time=0.004..0.004 rows=0 loops=1)
+               Sort Key: nom_pays, (avg(gravite_moyenne)) DESC
+               Sort Method: quicksort  Memory: 25kB
+               ->  HashAggregate  (cost=1.02..1.03 rows=1 width=400) (actual time=0.003..0.003 rows=0 loops=1)
+                     Group Key: nom_pays, conditions
+                     Batches: 1  Memory Usage: 24kB
+                     ->  Seq Scan on vm_accidents_complet  (cost=0.00..1.01 rows=1 width=376) (actual time=0.002..0.002 rows=0 loops=1)
+                           Filter: ((nom_pays IS NOT NULL) AND (conditions IS NOT NULL))
+                           Rows Removed by Filter: 1
+ Planning Time: 0.207 ms
+ Execution Time: 0.405 ms
+(16 rows)
+
+
+============================================================
+SANS VUE — Requête 2
+============================================================
+                                                                             QUERY PLAN                                                                             
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Sort  (cost=31401.29..31401.30 rows=3 width=47) (actual time=56.335..57.130 rows=3 loops=1)
+   Sort Key: (round((avg(f.indice_gravite))::numeric, 2)) DESC
+   Sort Method: quicksort  Memory: 25kB
+   ->  Finalize GroupAggregate  (cost=31400.47..31401.27 rows=3 width=47) (actual time=56.329..57.128 rows=3 loops=1)
+         Group Key: m.conditions
+         ->  Gather Merge  (cost=31400.47..31401.17 rows=6 width=47) (actual time=56.318..57.115 rows=9 loops=1)
+               Workers Planned: 2
+               Workers Launched: 2
+               ->  Sort  (cost=30400.45..30400.46 rows=3 width=47) (actual time=55.068..55.069 rows=3 loops=3)
+                     Sort Key: m.conditions
+                     Sort Method: quicksort  Memory: 25kB
+                     Worker 0:  Sort Method: quicksort  Memory: 25kB
+                     Worker 1:  Sort Method: quicksort  Memory: 25kB
+                     ->  Partial HashAggregate  (cost=30400.39..30400.42 rows=3 width=47) (actual time=55.051..55.052 rows=3 loops=3)
+                           Group Key: m.conditions
+                           Batches: 1  Memory Usage: 24kB
+                           Worker 0:  Batches: 1  Memory Usage: 24kB
+                           Worker 1:  Batches: 1  Memory Usage: 24kB
+                           ->  Hash Join  (cost=233.25..30259.78 rows=18749 width=15) (actual time=0.977..53.266 rows=16371 loops=3)
+                                 Hash Cond: ((f.id_pays = m.id_pays) AND (f.date = m.date))
+                                 ->  Parallel Seq Scan on fait_accident f  (cost=0.00..29928.06 rows=18749 width=16) (actual time=0.021..49.959 rows=16371 loops=3)
+                                       Filter: (indice_gravite > '4'::double precision)
+                                       Rows Removed by Filter: 626485
+                                 ->  Hash  (cost=134.70..134.70 rows=6570 width=15) (actual time=0.937..0.937 rows=6570 loops=3)
+                                       Buckets: 8192  Batches: 1  Memory Usage: 375kB
+                                       ->  Seq Scan on dim_meteo m  (cost=0.00..134.70 rows=6570 width=15) (actual time=0.012..0.448 rows=6570 loops=3)
+ Planning Time: 0.101 ms
+ Execution Time: 57.146 ms
+(28 rows)
+
+
+============================================================
+AVEC VUE — Requête 2
+============================================================
+                                                         QUERY PLAN                                                         
+----------------------------------------------------------------------------------------------------------------------------
+ Sort  (cost=1.11..1.12 rows=3 width=464) (actual time=0.005..0.005 rows=1 loops=1)
+   Sort Key: (COALESCE(nom_pays, 'TOTAL'::character varying)), (round(avg(gravite_moyenne), 2)) DESC
+   Sort Method: quicksort  Memory: 25kB
+   ->  MixedAggregate  (cost=0.00..1.09 rows=3 width=464) (actual time=0.003..0.004 rows=1 loops=1)
+         Hash Key: nom_pays, conditions
+         Hash Key: nom_pays
+         Group Key: ()
+         ->  Seq Scan on vm_accidents_complet  (cost=0.00..1.01 rows=1 width=376) (actual time=0.002..0.002 rows=0 loops=1)
+               Filter: (gravite_moyenne > '4'::numeric)
+               Rows Removed by Filter: 1
+ Planning Time: 0.049 ms
+ Execution Time: 0.017 ms
+(12 rows)
+
+
+============================================================
+SANS VUE — Requête 3
+============================================================
+                                                                                         QUERY PLAN                                                                                         
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=72853.45..72853.50 rows=20 width=310) (actual time=534.102..534.567 rows=20 loops=1)
+   ->  Sort  (cost=72853.45..72890.95 rows=14999 width=310) (actual time=534.101..534.565 rows=20 loops=1)
+         Sort Key: (round((avg(f.indice_gravite))::numeric, 2)) DESC
+         Sort Method: top-N heapsort  Memory: 27kB
+         ->  Finalize GroupAggregate  (cost=66298.10..72454.34 rows=14999 width=310) (actual time=529.069..534.491 rows=339 loops=1)
+               Group Key: p.nom_pays, l.departement, l.district, m.conditions
+               Filter: (count(*) >= 50)
+               Rows Removed by Filter: 1068
+               ->  Gather Merge  (cost=66298.10..71141.90 rows=37498 width=278) (actual time=528.940..533.490 rows=4044 loops=1)
+                     Workers Planned: 2
+                     Workers Launched: 2
+                     ->  Partial GroupAggregate  (cost=65298.08..65813.68 rows=18749 width=278) (actual time=526.480..529.487 rows=1348 loops=3)
+                           Group Key: p.nom_pays, l.departement, l.district, m.conditions
+                           ->  Sort  (cost=65298.08..65344.95 rows=18749 width=246) (actual time=526.470..526.885 rows=16371 loops=3)
+                                 Sort Key: p.nom_pays, l.departement, l.district, m.conditions
+                                 Sort Method: quicksort  Memory: 1743kB
+                                 Worker 0:  Sort Method: quicksort  Memory: 1356kB
+                                 Worker 1:  Sort Method: quicksort  Memory: 1352kB
+                                 ->  Hash Join  (cost=30411.97..61786.91 rows=18749 width=246) (actual time=54.811..490.539 rows=16371 loops=3)
+                                       Hash Cond: (f.id_pays = p.id_pays)
+                                       ->  Hash Join  (cost=30395.67..61720.65 rows=18749 width=36) (actual time=54.788..488.654 rows=16371 loops=3)
+                                             Hash Cond: ((f.id_pays = m.id_pays) AND (f.date = m.date))
+                                             ->  Parallel Hash Join  (cost=30162.42..61388.93 rows=18749 width=29) (actual time=53.844..483.959 rows=16371 loops=3)
+                                                   Hash Cond: (l.id_lieu = f.id_lieu)
+                                                   ->  Parallel Seq Scan on dim_localisation l  (cost=0.00..28133.83 rows=803883 width=17) (actual time=1.716..374.881 rows=642856 loops=3)
+                                                   ->  Parallel Hash  (cost=29928.06..29928.06 rows=18749 width=20) (actual time=51.979..51.980 rows=16371 loops=3)
+                                                         Buckets: 65536  Batches: 1  Memory Usage: 3232kB
+                                                         ->  Parallel Seq Scan on fait_accident f  (cost=0.00..29928.06 rows=18749 width=20) (actual time=0.022..50.108 rows=16371 loops=3)
+                                                               Filter: (indice_gravite > '4'::double precision)
+                                                               Rows Removed by Filter: 626485
+                                             ->  Hash  (cost=134.70..134.70 rows=6570 width=15) (actual time=0.929..0.929 rows=6570 loops=3)
+                                                   Buckets: 8192  Batches: 1  Memory Usage: 375kB
+                                                   ->  Seq Scan on dim_meteo m  (cost=0.00..134.70 rows=6570 width=15) (actual time=0.011..0.443 rows=6570 loops=3)
+                                       ->  Hash  (cost=12.80..12.80 rows=280 width=222) (actual time=0.014..0.015 rows=2 loops=3)
+                                             Buckets: 1024  Batches: 1  Memory Usage: 9kB
+                                             ->  Seq Scan on dim_pays p  (cost=0.00..12.80 rows=280 width=222) (actual time=0.012..0.013 rows=2 loops=3)
+ Planning Time: 0.288 ms
+ Execution Time: 534.619 ms
+(38 rows)
+
+
+============================================================
+AVEC VUE — Requête 3
+============================================================
+                                                                  QUERY PLAN                                                                  
+----------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=1.09..1.10 rows=1 width=464) (actual time=0.007..0.007 rows=0 loops=1)
+   ->  Sort  (cost=1.09..1.10 rows=1 width=464) (actual time=0.006..0.007 rows=0 loops=1)
+         Sort Key: (round((avg(gravite_moyenne)), 2)) DESC
+         Sort Method: quicksort  Memory: 25kB
+         ->  WindowAgg  (cost=1.02..1.08 rows=1 width=464) (actual time=0.005..0.005 rows=0 loops=1)
+               ->  GroupAggregate  (cost=1.02..1.06 rows=1 width=432) (actual time=0.004..0.005 rows=0 loops=1)
+                     Group Key: nom_pays, zone, conditions
+                     Filter: (sum(nb_accidents) >= '50'::numeric)
+                     ->  Sort  (cost=1.02..1.03 rows=1 width=408) (actual time=0.004..0.004 rows=0 loops=1)
+                           Sort Key: nom_pays, zone, conditions
+                           Sort Method: quicksort  Memory: 25kB
+                           ->  Seq Scan on vm_accidents_complet  (cost=0.00..1.01 rows=1 width=408) (actual time=0.003..0.003 rows=0 loops=1)
+                                 Filter: ((zone IS NOT NULL) AND (gravite_moyenne > '4'::numeric))
+                                 Rows Removed by Filter: 1
+ Planning Time: 0.067 ms
+ Execution Time: 0.020 ms
+(16 rows)
+
