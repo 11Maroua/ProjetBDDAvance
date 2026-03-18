@@ -185,3 +185,56 @@ collision_YYYY.csv  ─┐
 casualty_YYYY.csv   ─┤─ collision_index ─→ 1 accident
 vehicle_YYYY.csv    ─┘
 ```
+
+---
+
+## Renseignement sur les colonnes calculées
+
+Ces colonnes n'existent pas dans les sources brutes — elles sont calculées par `buildfait.py`.
+
+### `indice_gravite` (FAIT_ACCIDENT)
+
+Pondération de la gravité d'un accident basée sur le nombre de victimes :
+```
+indice_gravite = nb_tues × 3 + nb_blesses_graves × 2 + nb_blesses_legers × 1
+```
+
+| Valeur | Interprétation |
+|--------|---------------|
+| 0 | Aucune victime |
+| 1-3 | Accident léger |
+| 4-9 | Accident grave |
+| 10+ | Accident très grave (ex: accident de bus) |
+
+### `score_gravite` (FAIT_ACCIDENT)
+
+Normalisation min-max de `indice_gravite` sur une échelle de 1 à 5 :
+```
+score_gravite = 1 + 4 × (indice_gravite - min) / (max - min)
+```
+
+Utile pour comparer la gravité entre pays et années sur une échelle commune.
+
+### `conditions` (DIM_METEO)
+
+Condition météo du jour calculée depuis les précipitations, le vent et la température :
+
+| Valeur | Règle |
+|--------|-------|
+| `pluie` | précipitations > 2mm |
+| `vent_fort` | vent ≥ 40 m/s |
+| `ensoleille` | temp_max ≥ 20°C et pas de pluie |
+| `nuageux` | tous les autres cas |
+
+> Seuil de 2mm choisi pour correspondre à la définition météorologique standard d'un jour de pluie à l'échelle nationale.
+
+### `gravite` (DIM_USAGER)
+
+Gravité de chaque usager impliqué dans l'accident :
+
+| Valeur | Source FR (`grav`) | Source UK (`casualty_severity`) |
+|--------|-------------------|--------------------------------|
+| `Killed` | 2 | 1 |
+| `Seriously injured` | 3 | 2 |
+| `Slightly injured` | 4 | 3 |
+| `Uninjured` | 1 | — |
