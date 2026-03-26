@@ -16,7 +16,47 @@ pip install requests pandas pyproj holidays sqlalchemy psycopg2-binary
 
 ## Structure du projet
 
-
+## Structure du projet
+```
+ProjetBDDAvance/
+├── data/
+│   ├── dims/          ← dimensions finales (ignorées par git à générer avec scripts création fact_table)
+│   ├── processed/     ← fichiers intermédiaires (ignorés par git à générer avec scripts création fact_table)
+│   └── raw/           ← données brutes (ignorées par git à générer avec scripts création recup_données)
+├── docs/
+│   ├── guides/
+│   │   ├── guide_colonnesSources_vers_Dimensions.md
+│   │   └── guide_generation_table_fait.md
+│   └── images/
+│       └── schema_etoile.png
+├── src/
+│   ├── control_access/
+│   │   ├── controles_acces.sql
+│   │   └── tests_rls.txt
+│   ├── materialized_views/
+│   │   ├── analyze_impact_mv.md
+│   │   ├── explain_analyze_results.txt
+│   │   ├── mv_requests.sql
+│   │   └── mv.sql
+│   ├── queries/
+│   │   ├── queries_Adele/
+│   │   ├── queries_Ikram/
+│   │   ├── queries_Lila/
+│   │   └── queries_Maroua/
+│   ├── scripts_creation_fact_table/
+│   │   ├── buildfait.py
+│   │   ├── generation_dimTemps.ipynb
+│   │   ├── loaddb.py
+│   │   └── preprocess_meteo.py
+│   └── scripts_recup_donnees/
+│       ├── download_accidents_fr.py
+│       ├── download_accidents_uk.py
+│       ├── download_meteo_fr.py
+│       └── download_meteo_uk.py
+├── .gitignore
+├── README.md
+├── schema_accidents.sql
+```
 ---
 ## Schéma de l'entrepot
 
