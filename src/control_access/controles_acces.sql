@@ -1,10 +1,11 @@
 -- Création des rôles
-CREATE ROLE francais;
-CREATE ROLE anglais;
+CREATE ROLE FRANCAIS;
+CREATE ROLE ANGLAIS;
 CREATE ROLE medecin;
 CREATE ROLE policier;
-CREATE ROLE admin_global;
+CREATE ROLE ADMIN_GLOBAL;
 
+"""
 -- admin_global : accès total à toutes les tables
 GRANT SELECT ON ALL TABLES IN SCHEMA public TO admin_global;
 
@@ -14,9 +15,29 @@ GRANT SELECT ON fait_accident TO francais, anglais;
 -- Droits de lecture par métier
 GRANT SELECT ON dim_usager   TO medecin;
 GRANT SELECT ON dim_vehicule TO policier;
+"""
+
+
+-- Droits pour l'administrateur
+GRANT SELECT ON UTILISATEUR_PAYS TO ADMIN_GLOBAL;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO ADMIN_GLOBAL;
+
+-- Droits pour les autres utilisateurs
+GRANT SELECT ON FAIT_ACCIDENT TO ADMIN40_CLIENT;
+
+CREATE TABLE UTILISATEUR_PAYS(
+utilisateur VARCHAR(20) PRIMARY KEY,
+pays INTEGER(3)
+);
 
 -- Activation du RLS sur fait_accident
-ALTER TABLE fait_accident ENABLE ROW LEVEL SECURITY;
+ALTER TABLE FAIT_ACCIDENT ENABLE ROW LEVEL SECURITY;
+
+-- Insertion de tuples qui permettront de renseigner l agence d un employé de la banque
+INSERT INTO utilisateur_pays VALUES
+('FRANCAIS',1),
+('ANGLAIS',2);
+
 
 -- Politique FR : uniquement les accidents français
 CREATE POLICY acces_pays_fr
