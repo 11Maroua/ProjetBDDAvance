@@ -15,8 +15,6 @@ pip install requests pandas pyproj holidays sqlalchemy psycopg2-binary
 ---
 
 ## Structure du projet
-
-## Structure du projet
 ```
 ProjetBDDAvance/
 ├── data/
