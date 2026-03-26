@@ -208,3 +208,10 @@ python3 src/scripts_creation_fact_table/loaddb.py
 `docs/guide_colonnesSources_vers_Dimensions.md` — détail du mapping entre les colonnes des fichiers bruts et les colonnes des dimensions, avec les correspondances FR ↔ UK et les points d'attention par champ.
 
 `docs/guide_generation_table_fait.md` — détail du fonctionnement de `buildfait.py` : décodage des codes numériques, conversion des coordonnées, construction des clés surrogates et calcul des mesures de la table des faits.
+
+---
+
+## Licence
+
+Ce projet est distribué sous **Licence Ouverte / Open Licence Version 2.0** .
+Toute réutilisation doit mentionner les sources originales listées dans la section **Sources de données**.
