@@ -41,7 +41,7 @@ def normaliser_date(serie):
 def construire_conditions(precip, vent, tmax):
     """
     4 conditions homogènes FR + UK :
-    - pluie      : précipitations > 0
+    - pluie      : précipitations > 2.0 mm
     - vent_fort  : vent >= 40 m/s (et pas de précip)
     - ensoleille : temp max >= 20°C (et pas de précip, pas de vent fort)
     - nuageux    : tous les autres cas

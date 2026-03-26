@@ -38,7 +38,7 @@ Fichier : `data/processed/DIM_PAYS.csv`
 | 1 | FR | France |
 | 2 | UK | Royaume-Uni |
 
-> Créée manuellement, pas extraite des sources.
+> A été créée manuellement, pas extraite des sources.
 
 ---
 
