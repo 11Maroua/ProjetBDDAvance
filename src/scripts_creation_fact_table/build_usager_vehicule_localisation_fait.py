@@ -9,9 +9,6 @@ Output files (written to OUTPUT_DIR):
   dim_localisation.csv
   dim_usager.csv
   dim_vehicule.csv
-  dim_pays.csv        (static — 2 rows)
-  dim_date.csv        (copied from DIM_TEMPS.csv)
-  dim_meteo.csv       (copied from dim_meteo source)
 
 FR files (one per year):
   RAW_DIR/accidents_fr/caracteristiques_YEAR.csv
@@ -34,6 +31,7 @@ import csv as csv_mod
 import pandas as pd
 import shutil
 from pyproj import Transformer
+
 
 # ─────────────────────────────────────────────────────────────
 # CONFIGURATION
@@ -210,25 +208,12 @@ def close_outputs():
     for fh in _handles.values():
         fh.close()
 
-# ─────────────────────────────────────────────────────────────
-# LOAD DIMENSION LOOKUPS  (date + meteo)
-# ─────────────────────────────────────────────────────────────
-
-def load_lookups():
-    print("Loading lookups (meteo only — date stored as string)...")
-    meteo = read(fp(DIM_SOURCE_DIR, "dim_meteo.csv"))
-    meteo_map = {
-        (int(row["id_pays"]), str(row["date"])[:10]): int(row["id_meteo"])
-        for _, row in meteo.iterrows()
-    }
-    print(f"  ✓ {len(meteo_map):,} meteo entries\n")
-    return meteo_map
 
 # ─────────────────────────────────────────────────────────────
 # PROCESS ONE FR YEAR
 # ─────────────────────────────────────────────────────────────
 
-def process_fr_year(year, meteo_map):
+def process_fr_year(year):
     print(f"  [FR {year}]", end=" ", flush=True)
 
     caract  = read(fp(RAW_DIR, "accidents_fr", f"caracteristiques_{year}.csv"))
@@ -329,7 +314,6 @@ def process_fr_year(year, meteo_map):
             "id_lieu":           loc_map.get(acc),
             "id_usager":         u_info.get("id_usager"),
             "id_vehicule":       veh_map.get(veh_key),
-            "id_meteo":          meteo_map.get((1, date_str)),
             "nb_tues":           nb_tues,
             "nb_blesses_graves": nb_grav,
             "nb_blesses_legers": nb_leg,
@@ -351,7 +335,7 @@ def process_fr_year(year, meteo_map):
 # PROCESS ONE UK YEAR
 # ─────────────────────────────────────────────────────────────
 
-def process_uk_year(year, meteo_map):
+def process_uk_year(year):
     print(f"  [UK {year}]", end=" ", flush=True)
 
     col_file = fp(RAW_DIR, "accidents_uk",
@@ -488,7 +472,6 @@ def process_uk_year(year, meteo_map):
             "id_lieu":           loc_map.get(cidx),
             "id_usager":         usager_map.get(cidx),
             "id_vehicule":       veh_map.get(cidx),
-            "id_meteo":          meteo_map.get((2, date_str)),
             "nb_tues":           nb_tues,
             "nb_blesses_graves": nb_grav,
             "nb_blesses_legers": nb_leg,
@@ -522,8 +505,7 @@ def finalize_fait(fait):
 # MAIN
 # ─────────────────────────────────────────────────────────────
 
-def main():
-    meteo_map = load_lookups()
+def build_fait():
 
     open_outputs()
     total_fait = 0
@@ -532,7 +514,7 @@ def main():
         # ── FR
         print("Processing FR years...")
         for year in YEARS:
-            fait = process_fr_year(year, meteo_map)
+            fait = process_fr_year(year)
             fait = finalize_fait(fait)
             write("fait", fait)
             total_fait += len(fait)
@@ -540,48 +522,13 @@ def main():
         # ── UK
         print("\nProcessing UK years...")
         for year in YEARS:
-            fait = process_uk_year(year, meteo_map)
+            fait = process_uk_year(year)
             fait = finalize_fait(fait)
             write("fait", fait)
             total_fait += len(fait)
 
     finally:
         close_outputs()
-
-    # ── Transform and write dim_date from DIM_TEMPS
-    temps = read(fp(DIM_SOURCE_DIR, "DIM_TEMPS.csv"))
-    if "id_temps" in temps.columns:
-        temps = temps.rename(columns={"id_temps": "id_date"})
-    if "est_ferie_fr" in temps.columns:
-        temps = temps.rename(columns={"est_ferie_fr": "est_jour_ferie"})
-    temps = temps.drop(columns=["est_ferie_uk", "trimestre", "nom_jour",
-                                 "nom_mois", "jour_semaine"], errors="ignore")
-    if "heure" not in temps.columns:
-        temps["heure"] = None
-    for col in ["est_weekend", "est_jour_ferie"]:
-        if col in temps.columns:
-            temps[col] = temps[col].astype(float).astype("boolean")
-    keep = ["id_date", "date", "annee", "mois", "jour", "heure",
-            "saison", "est_weekend", "est_jour_ferie"]
-    temps[[c for c in keep if c in temps.columns]].to_csv(
-        fp(OUTPUT_DIR, "dim_date.csv"), index=False)
-    print(f"\n  ✓ Written dim_date.csv ({len(temps):,} rows)")
-
-    # ── Transform and write dim_meteo
-    meteo = read(fp(DIM_SOURCE_DIR, "dim_meteo.csv"))
-    meteo = meteo.rename(columns={"T_min": "temp_min", "T_max": "temp_max"})
-    keep_m = ["id_meteo", "id_pays", "date", "temp_min", "temp_max",
-              "precipitations", "vent", "conditions"]
-    meteo[[c for c in keep_m if c in meteo.columns]].to_csv(
-        fp(OUTPUT_DIR, "dim_meteo.csv"), index=False)
-    print(f"  ✓ Written dim_meteo.csv ({len(meteo):,} rows)")
-
-    # ── Write dim_pays 
-    pd.DataFrame([
-        {"id_pays": 1, "code_pays": "FR", "nom_pays": "France"},
-        {"id_pays": 2, "code_pays": "UK", "nom_pays": "United Kingdom"},
-    ]).to_csv(fp(OUTPUT_DIR, "dim_pays.csv"), index=False)
-    print("  ✓ Written dim_pays.csv")
 
     print(f"\n{'═'*52}")
     print(f" All files written to: {OUTPUT_DIR}")
@@ -592,5 +539,3 @@ def main():
     print(f"  id_vehicule max     : {_counters['id_vehicule']:,}")
     print(f"\nNext step: run load_db.py to load all CSVs into PostgreSQL")
 
-if __name__ == "__main__":
-    main()

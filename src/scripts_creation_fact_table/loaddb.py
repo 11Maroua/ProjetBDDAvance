@@ -19,11 +19,11 @@ RENAME_MAP = {
 }
 
 DROP_COLS = {
-    "dim_date": ["est_ferie_uk"],
+    "dim_temps": ["est_ferie_uk"],
 }
 
 BOOL_COLS = {
-    "dim_date": ["est_weekend", "est_jour_ferie"],
+    "dim_temps": ["est_weekend", "est_jour_ferie"],
 }
 
 STR_COLS = {
@@ -125,14 +125,14 @@ def load_simple(filename, table, engine):
 # ─────────────────────────────────────────────────────────────
 
 def main():
-    print("Connecting to database...")
+    print("Connecting to  database...")
     engine = create_engine(DB_URL)
     with engine.connect() as conn:
         conn.execute(text("SELECT 1"))
     print("✓ Connected\n")
 
     load_simple("dim_pays.csv",         "dim_pays",         engine)
-    load_simple("dim_date.csv",         "dim_date",         engine)
+    load_simple("dim_temps.csv",         "dim_temps",         engine)
     load_simple("dim_meteo.csv",        "dim_meteo",        engine)
     load_simple("dim_localisation.csv", "dim_localisation", engine)
     load_simple("dim_usager.csv",       "dim_usager",       engine)

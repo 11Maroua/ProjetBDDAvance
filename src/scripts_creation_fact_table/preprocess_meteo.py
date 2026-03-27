@@ -2,9 +2,10 @@ import os
 import glob
 import pandas as pd
 
+
 RAW_FR_DIR = "data/raw/meteo_fr"
 RAW_UK_DIR = "data/raw/meteo_uk"
-OUT_FILE = "data/processed/dim_meteo.csv"
+OUT_FILE = "data/dims/dim_meteo.csv"
 
 ANNEES_CIBLES = {2005, 2007, 2009, 2011, 2013, 2015, 2017, 2019, 2021}
 
@@ -222,7 +223,7 @@ def verifier_jointure(df):
         print("[CHECK] Attention : il reste des doublons pour la jointure")
 
 
-def main():
+def build_meteo():
     print("=" * 60)
     print("PREPROCESSING DIM_METEO")
     print("=" * 60)
@@ -238,5 +239,3 @@ def main():
     print(f"\n[OK] Fichier créé : {OUT_FILE}")
 
 
-if __name__ == "__main__":
-    main()
