@@ -54,6 +54,6 @@ def build_temps():
                 id_temps += 1
 
     dim_temps = pd.DataFrame(rows)
-    dim_temps.to_csv("data/processed/DIM_TEMPS.csv", index=False)
+    dim_temps.to_csv("data/dims/dim_temps.csv", index=False)
     print(f"DIM_TEMPS générée : {len(dim_temps)} lignes")
     print(dim_temps.head(3))
