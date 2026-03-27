@@ -138,17 +138,23 @@ Lit tous les fichiers de `data/raw/` et `data/processed/` et produit dans `data/
 | `dim_vehicule.csv` | Véhicules impliqués |
 | `fait_accident.csv` | Table des faits |
 
+---
+
+## Étape 5 — Créer la base de données
+```bash
+psql -U postgres -c "CREATE DATABASE accidents_db;"
+```
 
 ---
 
-## Étape 5 — Créer le schéma PostgreSQL
+## Étape 6 — Créer le schéma PostgreSQL
 ```bash
 psql -U postgres -d accidents_db -f schema_accidents.sql
 ```
 
 ---
 
-## Étape 6 — Charger les données dans PostgreSQL
+## Étape 7 — Charger les données dans PostgreSQL
 
 Éditer `DB_URL` dans `loaddb.py` :
 ```python
@@ -162,7 +168,7 @@ python3 src/scripts_creation_fact_table/loaddb.py
 
 ---
 
-## Étape 7 — interroger notre entrepot 
+## Étape 8 — interroger notre entrepot 
 ```bash
 psql -U postgres -d accidents_db 
 ```
