@@ -49,6 +49,12 @@ def clean(chunk):
 def transform(chunk, table):
     if table in RENAME_MAP:
         chunk = chunk.rename(columns=RENAME_MAP[table])
+    if table == "dim_temps":
+        if "est_ferie_fr" in chunk.columns and "est_ferie_uk" in chunk.columns:
+            chunk["est_jour_ferie"] = (
+                chunk["est_ferie_fr"].astype(str).str.strip().str.lower().isin(["1", "true", "yes"]) |
+                chunk["est_ferie_uk"].astype(str).str.strip().str.lower().isin(["1", "true", "yes"])
+            )
     for col in DROP_COLS.get(table, []):
         chunk = chunk.drop(columns=[col], errors="ignore")
     for col in BOOL_COLS.get(table, []):
@@ -114,7 +120,7 @@ def stream(filepath, table):
         yield transform(clean(chunk), table)
 
 def write(chunk, table, engine):
-    
+
     chunk = chunk.where(pd.notnull(chunk), None)
     chunk = fix_numeric_overflow(chunk)
 
@@ -160,13 +166,8 @@ def main():
         conn.execute(text("SELECT 1"))
     print("✓ Connected\n")
 
-    load_simple("dim_pays.csv",         "dim_pays",         engine)
     load_simple("dim_temps.csv",         "dim_temps",         engine)
-    load_simple("dim_meteo.csv",        "dim_meteo",        engine)
-    load_simple("dim_localisation.csv", "dim_localisation", engine)
-    load_simple("dim_usager.csv",       "dim_usager",       engine)
-    load_simple("dim_vehicule.csv",     "dim_vehicule",     engine)
-    load_simple("fait_accident.csv",    "fait_accident",    engine)
+
 
     print(f"\n{'═'*48}")
     print(" Load complete")
