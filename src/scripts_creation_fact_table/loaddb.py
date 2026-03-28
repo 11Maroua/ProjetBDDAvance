@@ -166,8 +166,13 @@ def main():
         conn.execute(text("SELECT 1"))
     print("✓ Connected\n")
 
+    load_simple("dim_pays.csv",         "dim_pays",         engine)
     load_simple("dim_temps.csv",         "dim_temps",         engine)
-
+    load_simple("dim_meteo.csv",        "dim_meteo",        engine)
+    load_simple("dim_localisation.csv", "dim_localisation", engine)
+    load_simple("dim_usager.csv",       "dim_usager",       engine)
+    load_simple("dim_vehicule.csv",     "dim_vehicule",     engine)
+    load_simple("fait_accident.csv",    "fait_accident",    engine)
 
     print(f"\n{'═'*48}")
     print(" Load complete")

@@ -14,7 +14,6 @@ CREATE TABLE DIM_TEMPS (
     annee          INT,
     mois           INT,
     jour           INT,
-    heure          INT,
     saison         VARCHAR(20),
     est_weekend    BOOLEAN,
     est_jour_ferie BOOLEAN
