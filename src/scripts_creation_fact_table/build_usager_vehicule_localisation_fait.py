@@ -154,9 +154,12 @@ def decode(val, codebook):
 def safe_int(val):
     try:
         v = int(float(val))
-        return v if v >= 0 else None
-    except (ValueError, TypeError):
+        if v < 0 or v > 2_147_483_647:
+            return None
+        return v
+    except (ValueError, TypeError, OverflowError):
         return None
+
 
 def convert_lambert(lat, lon):
     try:
@@ -198,9 +201,30 @@ def open_outputs():
         _handles[key]      = open(path, "w", newline="", encoding="utf-8")
         _first_writes[key] = True
 
+def clean_df(df):
+
+    import numpy as np
+    
+    for col in df.columns:
+        if df[col].dtype in ["float64", "int64"]:
+            df[col] = df[col].apply(
+                lambda x: None if pd.isna(x) else x
+            )
+    return df
+
 def write(key, df):
     if df is None or len(df) == 0:
         return
+
+    # Force int columns to nullable Int64 so CSV writes 1 not 1.0, and NaN not nan
+    INT_COLUMNS = {
+        "usager": ["age", "place_vehicule"],
+        "loc":    ["vitesse_limite"],
+    }
+    for col in INT_COLUMNS.get(key, []):
+        if col in df.columns:
+            df[col] = pd.to_numeric(df[col], errors="coerce").astype("Int64")
+
     df.to_csv(_handles[key], header=_first_writes[key], index=False)
     _first_writes[key] = False
 
@@ -264,9 +288,9 @@ def process_fr_year(year):
         usager_rows.append({
             "id_usager":      new_id,
             "id_pays":        1,
-            "age":            age,
+            "age":            safe_int(age),
             "sexe":           decode(row.get("sexe"), FR_SEXE),
-            "place_vehicule": str(safe_int(row.get("place"))) if safe_int(row.get("place")) else None,
+            "place_vehicule": safe_int(row.get("place")) if safe_int(row.get("place")) else None,
             "gravite":        grav,
             "cat_usager":     decode(row.get("catu"), FR_CATU),
         })

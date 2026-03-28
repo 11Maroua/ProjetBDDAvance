@@ -10,7 +10,7 @@ from sqlalchemy import create_engine, text
 # ─────────────────────────────────────────────────────────────
 # CONFIGURATION 
 # ─────────────────────────────────────────────────────────────
-DB_URL = "postgresql://postgres:monmotdepasse@localhost:5432/accidents_db"
+DB_URL = "postgresql://postgres:mypassword@localhost:5432/accidents_db"
 DATA_DIR = "./data/dims"
 CHUNKSIZE = 50_000
 
@@ -19,13 +19,17 @@ RENAME_MAP = {
 }
 
 DROP_COLS = {
-    "dim_temps": ["est_ferie_uk"],
+    "dim_temps": ["est_ferie_uk","trimestre","jour_semaine","nom_jour","nom_mois","est_ferie_fr"],
 }
 
 BOOL_COLS = {
     "dim_temps": ["est_weekend", "est_jour_ferie"],
 }
 
+INT_COLS = {
+    "dim_usager":["place_vehicule","age"],
+    "dim_localisation": ["vitesse_limite"],
+}
 STR_COLS = {
     "dim_localisation": ["commune", "departement", "district"],
 }
@@ -47,13 +51,17 @@ def transform(chunk, table):
         chunk = chunk.rename(columns=RENAME_MAP[table])
     for col in DROP_COLS.get(table, []):
         chunk = chunk.drop(columns=[col], errors="ignore")
-    if table == "fait_accident":
-        chunk = chunk.drop(columns=["id_meteo"], errors="ignore")
-    if table == "dim_date" and "heure" not in chunk.columns:
-        chunk["heure"] = None
     for col in BOOL_COLS.get(table, []):
         if col in chunk.columns:
             chunk[col] = chunk[col].astype(float).astype("boolean")
+    for col in INT_COLS.get(table, []):
+        if col in chunk.columns:
+            chunk[col] = pd.to_numeric(chunk[col], errors="coerce")
+            INT_MAX = 2_147_483_647
+            INT_MIN = 0
+            chunk[col] = chunk[col].apply(
+                lambda x: int(x) if pd.notna(x) and INT_MIN <= int(x) <= INT_MAX else None
+            ).astype("Int64")
     for col in STR_COLS.get(table, []):
         if col in chunk.columns:
             chunk[col] = chunk[col].astype(str).replace({"nan": None, "None": None})
@@ -83,6 +91,17 @@ def detect_params(filepath):
                     continue
     return "latin-1", ","
 
+def fix_numeric_overflow(chunk):
+    BIGINT_MAX = 9_223_372_036_854_775_807
+    INT_MIN    = -2_147_483_648
+
+    for col in chunk.select_dtypes(include=["int64", "float64"]).columns:
+        chunk[col] = chunk[col].apply(
+            lambda x: None if pd.isna(x) or x > BIGINT_MAX or x < INT_MIN else x
+        )
+    return chunk
+
+
 def read_chunks(filepath):
     encoding, sep = detect_params(filepath)
     for chunk in pd.read_csv(filepath, chunksize=CHUNKSIZE,
@@ -95,7 +114,17 @@ def stream(filepath, table):
         yield transform(clean(chunk), table)
 
 def write(chunk, table, engine):
-    # Récupérer les colonnes
+    
+    chunk = chunk.where(pd.notnull(chunk), None)
+    chunk = fix_numeric_overflow(chunk)
+
+    # Convert any remaining float values in INT columns to proper int or None
+    for col in INT_COLS.get(table, []):
+        if col in chunk.columns:
+            chunk[col] = chunk[col].apply(
+                lambda x: int(x) if x is not None and not (isinstance(x, float) and pd.isna(x)) else None
+            )
+
     cols = list(chunk.columns)
     col_str = ", ".join(cols)
     placeholders = ", ".join([f":{c}" for c in cols])

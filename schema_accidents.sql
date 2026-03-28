@@ -25,14 +25,14 @@ CREATE TABLE DIM_TEMPS (
 -- latitude/longitude converties en WGS84 (conversion Lambert93 faite dans buildfait.py)
 -- vitesse_limite en km/h (conversion mph→km/h faite dans buildfait.py pour UK)
 CREATE TABLE DIM_LOCALISATION (
-    id_lieu        INT PRIMARY KEY,
+    id_lieu        BIGINT PRIMARY KEY,
     id_pays        INT,
     CONSTRAINT fk_loc_pays FOREIGN KEY (id_pays) REFERENCES DIM_PAYS(id_pays),
     commune        VARCHAR(50),
     departement    VARCHAR(20),  
     district       VARCHAR(50),  
     type_route     VARCHAR(50),
-    vitesse_limite INT,
+    vitesse_limite FLOAT,
     latitude       FLOAT,
     longitude      FLOAT
 );
@@ -59,9 +59,9 @@ CREATE TABLE DIM_USAGER (
     id_usager      INT PRIMARY KEY,
     id_pays        INT,
     CONSTRAINT fk_usager_pays FOREIGN KEY (id_pays) REFERENCES DIM_PAYS(id_pays),
-    age            INT, -- age calculé depuis an_nais pour FR, directement disponible pour UK
+    age            FLOAT, -- age calculé depuis an_nais pour FR, directement disponible pour UK
     sexe           VARCHAR(20),
-    place_vehicule VARCHAR(50),
+    place_vehicule FLOAT,
     gravite        VARCHAR(50),
     cat_usager     VARCHAR(50)
 );

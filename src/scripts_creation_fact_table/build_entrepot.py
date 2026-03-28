@@ -5,10 +5,10 @@ from build_temps import build_temps
 
 
 def main():
-    build_fait()
     build_meteo()
     build_pays()
     build_temps()
+    build_fait()
 
 
 if __name__ == "__main__":

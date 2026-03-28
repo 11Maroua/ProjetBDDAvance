@@ -21,7 +21,7 @@ def build_temps():
     }
 
     rows = []
-    id_temps = 1
+    id_date = 1
 
     for annee in ANNEES:
         for mois in range(1, 13):
@@ -32,7 +32,7 @@ def build_temps():
                     continue
 
                 rows.append({
-                    "id_temps":     id_temps,
+                    "id_date":     id_date,
                     "date":         date.strftime("%Y-%m-%d"),
                     "jour":         date.day,
                     "mois":         date.month,
@@ -51,7 +51,7 @@ def build_temps():
                         "Automne"
                     ),
                 })
-                id_temps += 1
+                id_date += 1
 
     dim_temps = pd.DataFrame(rows)
     dim_temps.to_csv("data/dims/dim_temps.csv", index=False)
