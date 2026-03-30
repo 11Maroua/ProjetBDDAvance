@@ -1,70 +1,104 @@
 -- Création des rôles
-CREATE ROLE FRANCAIS;
-CREATE ROLE ANGLAIS;
-CREATE ROLE medecin;
-CREATE ROLE policier;
-CREATE ROLE ADMIN_GLOBAL;
+CREATE ROLE USER1;
+CREATE ROLE USER2;
 
-"""
--- admin_global : accès total à toutes les tables
-GRANT SELECT ON ALL TABLES IN SCHEMA public TO admin_global;
+CREATE ROLE MEDECIN;
+CREATE ROLE POLICIER;
+CREATE ROLE ADMIN_USER;
+CREATE ROLE ADMIN_GLOBAL LOGIN BYPASSRLS;
 
--- Droits de lecture sur la table des faits
-GRANT SELECT ON fait_accident TO francais, anglais;
+-- Création d'une table indiquant la nationalité de chaque user
+CREATE TABLE UTILISATEUR_PAYS(
+utilisateur VARCHAR(20) PRIMARY KEY,
+pays INTEGER
+);
 
--- Droits de lecture par métier
-GRANT SELECT ON dim_usager   TO medecin;
-GRANT SELECT ON dim_vehicule TO policier;
-"""
+-- Remplissage de la table UTILISATEUR_PAYS
+INSERT INTO UTILISATEUR_PAYS VALUES
+('USER1',1),    -- français
+('USER2',2),    -- anglais
+('MEDECIN',1),
+('POLICIER',2);
 
-
--- Droits pour l'administrateur
+-- Droits pour l'administrateur 
 GRANT SELECT ON UTILISATEUR_PAYS TO ADMIN_GLOBAL;
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO ADMIN_GLOBAL;
 
--- Droits pour les autres utilisateurs
-GRANT SELECT ON FAIT_ACCIDENT TO ADMIN40_CLIENT;
+-- Droits pour les autres rôles 
+GRANT SELECT ON fait_accident TO MEDCIN;
+GRANT SELECT ON fait_accident TO POLICIER;
+GRANT SELECT ON dim_usager   TO MEDECIN;
+GRANT SELECT ON dim_vehicule TO POLICIER;
 
-CREATE TABLE UTILISATEUR_PAYS(
-utilisateur VARCHAR(20) PRIMARY KEY,
-pays INTEGER(3)
-);
+-- Droits pour les user
+GRANT SELECT ON fait_accident TO ADMIN_USER;
 
--- Activation du RLS sur fait_accident
+
+-- Activation du RLS sur la table des faits
 ALTER TABLE FAIT_ACCIDENT ENABLE ROW LEVEL SECURITY;
 
--- Insertion de tuples qui permettront de renseigner l agence d un employé de la banque
-INSERT INTO utilisateur_pays VALUES
-('FRANCAIS',1),
-('ANGLAIS',2);
-
-
--- Politique FR : uniquement les accidents français
-CREATE POLICY acces_pays_fr
-ON fait_accident FOR SELECT TO francais
-USING (id_pays = 1);
-
--- Politique UK : uniquement les accidents britanniques
-CREATE POLICY acces_pays_uk
-ON fait_accident FOR SELECT TO anglais
-USING (id_pays = 2);
-
--- Activation du RLS sur dim_usager
+-- Activation du RLS sur les dimensions
 ALTER TABLE dim_usager ENABLE ROW LEVEL SECURITY;
-
--- Politique médecin : uniquement blessés et tués
-CREATE POLICY acces_medecin_select
-ON dim_usager FOR SELECT TO medecin
-USING (gravite IN ('Killed', 'Seriously injured'));
-
-CREATE POLICY acces_medecin_update
-ON dim_usager FOR UPDATE TO medecin
-USING (gravite IN ('Killed', 'Seriously injured'));
-
--- Activation du RLS sur dim_vehicule
 ALTER TABLE dim_vehicule ENABLE ROW LEVEL SECURITY;
+ALTER TABLE dim_localisation ENABLE ROW LEVEL SECURITY;
+ALTER TABLE dim_temps ENABLE ROW LEVEL SECURITY;
+ALTER TABLE dim_pays ENABLE ROW LEVEL SECURITY;
+ALTER TABLE dim_meteo ENABLE ROW LEVEL SECURITY;
 
--- Politique policier : accès à tous les véhicules
-CREATE POLICY acces_policier
-ON dim_vehicule FOR SELECT TO policier
-USING (true);
+-- Sous-requête réutilisable (pour éviter la répétition)
+CREATE OR REPLACE FUNCTION pays_utilisateur_courant()
+RETURNS INTEGER
+LANGUAGE SQL
+SECURITY DEFINER   -- s'exécute avec les droits du créateur, pas de l'appelant
+STABLE
+AS $$
+    SELECT id_pays
+    FROM UTILISATEUR_PAYS
+    WHERE utilisateur = current_user;
+$$;
+
+-- Politique de sécurité sur la table des faits
+DROP POLICY acces_pays ON fait_accident;
+CREATE POLICY acces_pays
+ON fait_accident
+FOR SELECT
+USING (
+    id_pays = pays_utilisateur_courant()
+);
+
+-- Politique sur DIM_USAGER
+CREATE POLICY acces_pays
+ON DIM_USAGER
+FOR SELECT
+USING (
+    id_pays = pays_utilisateur_courant()
+);
+
+-- Politique sur DIM_VEHICULE
+CREATE POLICY acces_pays
+ON DIM_VEHICULE
+FOR SELECT
+USING (
+    id_pays = pays_utilisateur_courant()
+);
+
+-- Protection de la table UTILISATEUR_PAYS
+ALTER TABLE UTILISATEUR_PAYS ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY acces_propre_ligne
+ON UTILISATEUR_PAYS
+FOR SELECT
+USING (
+    utilisateur = current_user
+);
+
+-- DIM_TEMPS et DIM_PAYS : pas de filtre pays, accès libre
+DROP POLICY IF EXISTS tout_voir ON dim_temps;
+CREATE POLICY tout_voir ON dim_temps FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS tout_voir ON dim_pays;
+CREATE POLICY tout_voir ON dim_pays FOR SELECT USING (true);
+
+
+-- L'administrateur voit tout 
+GRANT SELECT ON UTILISATEUR_PAYS TO ADMIN_GLOBAL;
