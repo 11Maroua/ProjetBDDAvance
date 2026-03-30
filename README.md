@@ -19,7 +19,6 @@ pip install requests pandas pyproj holidays sqlalchemy psycopg2-binary
 ProjetBDDAvance/
 ├── data/
 │   ├── dims/          ← dimensions finales (ignorées par git à générer avec scripts création fact_table)
-│   ├── processed/     ← fichiers intermédiaires (ignorés par git à générer avec scripts création fact_table)
 │   └── raw/           ← données brutes (ignorées par git à générer avec scripts création recup_données)
 ├── docs/
 │   ├── guides/
@@ -42,8 +41,10 @@ ProjetBDDAvance/
 │   │   ├── queries_Lila/
 │   │   └── queries_Maroua/
 │   ├── scripts_creation_fact_table/
-│   │   ├── buildfait.py
-│   │   ├── generation_dimTemps.ipynb
+│   │   ├── build_entrepot.py
+│   │   ├── build_pays
+│   │   ├── build_temps
+│   │   ├── build_usager_vehicule_localisation_fait.py
 │   │   ├── loaddb.py
 │   │   └── preprocess_meteo.py
 │   └── scripts_recup_donnees/
@@ -93,45 +94,20 @@ Les fichiers sont téléchargés dans `data/raw/`.
 
 ---
 
-## Étape 2 — Générer DIM_TEMPS et DIM_PAYS
+## Étape 2 — Générer les fichiers de l'entrepôt
 
-Ouvrir et exécuter toutes les cellules du notebook :
-```
-src/scripts_creation_fact_table/generation_dimTemps.ipynb
-```
+Exécuter le script suivant pour générer toutes les dimensions ainsi que la table des faits. 
 
-Ajouter cette cellule en première position avant d'exécuter :
-```python
-import os
-os.chdir("/chemin/absolu/vers/ProjetBDDAvance")
-```
-
-Produit dans `data/processed/` :
-- `DIM_TEMPS.csv` — 3 285 lignes, une par jour pour les 9 années
-- `DIM_PAYS.csv` — 2 lignes : France (id=1) et Royaume-Uni (id=2)
-
----
-
-## Étape 3 — Générer DIM_METEO
 ```bash
-python3 src/scripts_creation_fact_table/preprocess_meteo.py
+python3 src/scripts_creation_fact_table/build_entrepot.py
 ```
 
-Produit `data/processed/dim_meteo.csv` — une ligne par jour par pays.
-
----
-
-## Étape 4 — Finaliser la construction des autres dimensions et la table des faits
-```bash
-python3 src/scripts_creation_fact_table/buildfait.py
-```
-
-Lit tous les fichiers de `data/raw/` et `data/processed/` et produit dans `data/dims/` :
+Lit tous les fichiers de `data/raw/` et produit dans `data/dims/` :
 
 | Fichier | Contenu |
 |---------|---------|
 | `dim_pays.csv` | 2 lignes |
-| `dim_date.csv` | Calendrier des 9 années |
+| `dim_temps.csv` | Calendrier des 9 années |
 | `dim_meteo.csv` | Météo quotidienne FR + UK |
 | `dim_localisation.csv` | Lieux des accidents |
 | `dim_usager.csv` | Usagers impliqués |
@@ -140,21 +116,21 @@ Lit tous les fichiers de `data/raw/` et `data/processed/` et produit dans `data/
 
 ---
 
-## Étape 5 — Créer la base de données
+## Étape 3 — Créer la base de données
 ```bash
 psql -U postgres -c "CREATE DATABASE accidents_db;"
 ```
 
 ---
 
-## Étape 6 — Créer le schéma PostgreSQL
+## Étape 4 — Créer le schéma PostgreSQL
 ```bash
 psql -U postgres -d accidents_db -f schema_accidents.sql
 ```
 
 ---
 
-## Étape 7 — Charger les données dans PostgreSQL
+## Étape 5 — Charger les données dans PostgreSQL
 
 Éditer `DB_URL` dans `loaddb.py` :
 ```python
@@ -168,7 +144,7 @@ python3 src/scripts_creation_fact_table/loaddb.py
 
 ---
 
-## Étape 8 — interroger notre entrepot 
+## Étape 6 — interroger notre entrepot 
 ```bash
 psql -U postgres -d accidents_db 
 ```
@@ -195,8 +171,7 @@ python3 src/scripts_recup_donnees/download_meteo_uk.py
 
 **2. Regénérer les fichiers CSV**
 ```bash
-python3 src/scripts_creation_fact_table/preprocess_meteo.py
-python3 src/scripts_creation_fact_table/buildfait.py
+python3 src/scripts_creation_fact_table/build_entrepot.py
 ```
 
 **3. Insérer dans PostgreSQL**

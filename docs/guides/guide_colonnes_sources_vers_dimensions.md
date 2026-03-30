@@ -4,12 +4,6 @@
 
 Ce fichier explique quelles colonnes des fichiers bruts (`data/raw/`) alimentent quelles dimensions et la table de faits. Les fichiers bruts ne sont pas sur GitHub (car trop volumineux) — relancer les scripts dans `src/scripts_recup_donnees/` pour les régénérer.
 
-Les dimensions temps et pays déjà produites sont dans `data/processed/` et directement utilisables :
-
-```python
-dim_temps = pd.read_csv("data/processed/DIM_TEMPS.csv")
-dim_pays  = pd.read_csv("data/processed/DIM_PAYS.csv")
-```
 
 ---
 
@@ -31,7 +25,7 @@ dim_pays  = pd.read_csv("data/processed/DIM_PAYS.csv")
 
 ## DIM_PAYS 
 
-Fichier : `data/processed/DIM_PAYS.csv`
+Fichier : `data/dims/dim_pays.csv`
 
 | id_pays | code_pays | nom_pays |
 |---------|-----------|----------|
@@ -44,7 +38,7 @@ Fichier : `data/processed/DIM_PAYS.csv`
 
 ## DIM_TEMPS  
 
-Fichier : `data/processed/DIM_TEMPS.csv`
+Fichier : `data/dims/dim_temps.csv`
 
 | Colonne DIM_TEMPS | Source FR | Source UK | Notes |
 |-------------------|-----------|-----------|-------|
@@ -61,8 +55,8 @@ Fichier : `data/processed/DIM_TEMPS.csv`
 | `est_ferie_uk` | — | calculé | librairie `holidays` |
 | `saison` | calculé | calculé | Hiver/Printemps/Eté/Automne |
 
-> DIM_TEMPS couvre toutes les dates des 9 années, une ligne par jour (3285 lignes total).  
-> La jointure avec FAIT_ACCIDENT se fait sur la colonne `date`.
+> dim_temps couvre toutes les dates des 9 années, une ligne par jour (3285 lignes total).  
+> La jointure avec fait_accident se fait sur la colonne `date`.
 
 ---
 
@@ -150,11 +144,10 @@ Clé primaire : `id_accident`
 | Colonne | Source FR | Source UK | Notes |
 |---------|-----------|-----------|-------|
 | `id_accident` | `Num_Acc` | `collision_index` | Clé naturelle |
-| `id_temps` | jointure sur `date` → DIM_TEMPS | jointure sur `date` → DIM_TEMPS | |
+| `date` | jointure sur `date` → DIM_TEMPS | jointure sur `date` → DIM_TEMPS | |
 | `id_lieu` | jointure → DIM_LOCALISATION | jointure → DIM_LOCALISATION | |
 | `id_usager` | jointure → DIM_USAGER | jointure → DIM_USAGER | |
 | `id_vehicule` | jointure → DIM_VEHICULE | jointure → DIM_VEHICULE | |
-| `id_meteo` | jointure sur `date` + `id_pays` → DIM_METEO | idem | |
 | `id_pays` | 1 | 2 | |
 | `nb_tues` | usagers : count(`grav`==2) | casualty : count(`casualty_severity`==1) | |
 | `nb_blesses_graves` | usagers : count(`grav`==3) | casualty : count(`casualty_severity`==2) | |
@@ -190,7 +183,7 @@ vehicle_YYYY.csv    ─┘
 
 ## Renseignement sur les colonnes calculées
 
-Ces colonnes n'existent pas dans les sources brutes — elles sont calculées par `buildfait.py`.
+Ces colonnes n'existent pas dans les sources brutes — elles sont calculées par `build_usager_vehicule_localisation_fait.py`.
 
 ### `indice_gravite` (FAIT_ACCIDENT)
 

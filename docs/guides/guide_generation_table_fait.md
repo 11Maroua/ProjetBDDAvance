@@ -1,15 +1,12 @@
-## Étape 4 — Construire les dimensions et la table des faits
+## Étape 2 — Construire les dimensions et la table des faits
 ```bash
-python3 src/scripts_creation_fact_table/buildfait.py
+python3 src/scripts_creation_fact_table/build_usager_vehicule_localisation_fait.py
 ```
 
-Lit tous les fichiers de `data/raw/` et `data/processed/` et produit dans `data/dims/` :
+Lit tous les fichiers de `data/raw/` et produit dans `data/dims/` :
 
 | Fichier | Contenu |
 |---------|---------|
-| `dim_pays.csv` | 2 lignes |
-| `dim_date.csv` | Calendrier des 9 années |
-| `dim_meteo.csv` | Météo quotidienne FR + UK |
 | `dim_localisation.csv` | Lieux des accidents |
 | `dim_usager.csv` | Usagers impliqués |
 | `dim_vehicule.csv` | Véhicules impliqués |
