@@ -9,7 +9,6 @@ ORDER BY p.nom_pays NULLS LAST, f.indice_gravite NULLS LAST
 LIMIT 10;
 
 -- Les accidents sont-ils plus graves pendant les jours feriés selon la météo
-
 SELECT
     m.conditions,                           
     COUNT(DISTINCT f.id_accident)          AS nb_accidents,

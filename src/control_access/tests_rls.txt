@@ -1,47 +1,50 @@
 === TEST ROLE FRANCAIS ===
-Requete : SELECT id_pays, COUNT(*) AS nb_accidents FROM fait_accident GROUP BY id_pays
+Requete : SELECT id_pays, COUNT(*) AS nb_accidents FROM fait_accident GROUP BY id_pays;
 SET
  id_pays | nb_accidents 
 ---------+--------------
        1 |       605369
 (1 row)
 
-
+RESET
 === TEST ROLE ANGLAIS ===
-Requete : SELECT id_pays, COUNT(*) AS nb_accidents FROM fait_accident GROUP BY id_pays
+Requete : SELECT id_pays, COUNT(*) AS nb_accidents FROM fait_accident GROUP BY id_pays;
 SET
  id_pays | nb_accidents 
 ---------+--------------
        2 |      1323199
 (1 row)
 
-
+RESET
 === TEST ROLE MEDECIN ===
-Requete : SELECT gravite, COUNT(*) AS nb_usagers FROM dim_usager GROUP BY gravite
+Requete : SELECT gravite, COUNT(*) AS nb_usagers FROM dim_usager GROUP BY gravite;
 SET
       gravite      | nb_usagers 
 -------------------+------------
- Killed            |      55111
- Seriously injured |     490828
-(2 rows)
+ Seriously injured |     269243
+ Unknown           |         60
+ Uninjured         |     558275
+ Slightly injured  |     493905
+ Killed            |      36295
+(5 rows)
 
-
+RESET
 === TEST ROLE POLICIER ===
-Requete : SELECT COUNT(*) AS nb_vehicules FROM dim_vehicule
+Requete : SELECT COUNT(*) AS nb_vehicules FROM dim_vehicule;
 SET
  nb_vehicules 
 --------------
-      3462921
+      2428552
 (1 row)
 
-
+RESET
 === TEST ACCES REFUSE : MEDECIN sur DIM_VEHICULE ===
-Requete : SELECT COUNT(*) FROM dim_vehicule
+Requete : SELECT COUNT(*) FROM dim_vehicule;
 SET
 ERROR:  permission denied for table dim_vehicule
-
+RESET
 === TEST ACCES REFUSE : FRANCAIS sur donnees UK ===
-Requete : SELECT COUNT(*) FROM fait_accident WHERE id_pays = 2
+Requete : SELECT COUNT(*) FROM fait_accident WHERE id_pays = 2;
 SET
  count 
 -------
@@ -49,3 +52,4 @@ SET
 (1 row)
 
 RESET
+RESET.

@@ -153,6 +153,11 @@ psql -U postgres -d accidents_db
 psql -U postgres -d accidents_db -f src/indexes/indexes.sql
 ```
 
+## Étape 8 — Vues matérialisées
+```bash
+psql -U postgres -d accidents_db -f src/materialized_views/mv.sql
+```
+
 Les index créés accélèrent les jointures sur `FAIT_ACCIDENT` et `DIM_TEMPS`.
 Voir `src/indexes/analyze_impact_indexes.md` pour l'analyse complète de l'impact.
 ## Mise à jour de l'entrepôt
