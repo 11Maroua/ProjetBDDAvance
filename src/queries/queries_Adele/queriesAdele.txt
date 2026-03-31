@@ -15,9 +15,13 @@ nom_pays |  sexe   | indice_gravite | nb_accidents
  France   | Male    |              4 |        19777
 (10 rows)
 
- conditions | nb_accidents | gravite_moyenne | tues_par_accident | blesses_graves_par_accident | nb_victimes_total 
-------------+--------------+-----------------+-------------------+-----------------------------+-------------------
- ensoleille |         3644 |            2.11 |              0.08 |                        0.54 |              5171
- nuageux    |        18675 |            1.83 |              0.04 |                        0.34 |             26247
- pluie      |        46282 |            1.67 |              0.03 |                        0.23 |             63935
-(3 rows)
+ 
+ conditions | est_jour_ferie | nb_accidents | gravite_moyenne 
+------------+----------------+--------------+-----------------
+ ensoleille | t              |         3644 |            2.11
+ ensoleille | f              |       125343 |            1.94
+ nuageux    | t              |        18675 |            1.83
+ nuageux    | f              |       548220 |            1.67
+ pluie      | t              |        46282 |            1.67
+ pluie      | f              |      1186404 |            1.59
+(6 rows)

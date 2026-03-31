@@ -10,15 +10,12 @@ LIMIT 10;
 
 -- Les accidents sont-ils plus graves pendant les jours feriés selon la météo
 SELECT
-    m.conditions,                           
-    COUNT(DISTINCT f.id_accident)          AS nb_accidents,
-    ROUND(AVG(f.indice_gravite)::numeric,    2)     AS gravite_moyenne,
-    ROUND(AVG(f.nb_tues)::numeric,           2)     AS tues_par_accident,
-    ROUND(AVG(f.nb_blesses_graves)::numeric, 2)     AS blesses_graves_par_accident,
-    SUM(f.nb_victimes_total)               AS nb_victimes_total
-FROM FAIT_ACCIDENT  f
-    JOIN DIM_TEMPS t ON t.date = f.date
-    JOIN DIM_METEO m ON m.id_pays = f.id_pays AND m.date = f.date
-GROUP BY (m.conditions, t.est_jour_ferie)
-
-ORDER BY gravite_moyenne DESC;
+    m.conditions,
+    t.est_jour_ferie,                          
+    COUNT(DISTINCT f.id_accident)              AS nb_accidents,
+    ROUND(AVG(f.indice_gravite)::numeric, 2)   AS gravite_moyenne
+FROM FAIT_ACCIDENT f
+JOIN DIM_TEMPS t ON t.date = f.date
+JOIN DIM_METEO m ON m.id_pays = f.id_pays AND m.date = f.date
+GROUP BY m.conditions, t.est_jour_ferie
+ORDER BY gravite_moyenne DESC, nb_accidents DESC;
