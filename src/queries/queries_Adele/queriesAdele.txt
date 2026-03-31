@@ -1,21 +1,17 @@
-#Résultats requêtes Adèle
-
-
-nom_pays |  sexe   | indice_gravite | nb_accidents 
-----------+---------+----------------+--------------
- France   | Male    |              1 |       203634
- France   | Female  |              1 |        81519
- France   | Unknown |              1 |         1018
- France   | Unknown |              2 |          300
- France   | Female  |              2 |        55431
- France   | Male    |              2 |       158255
- France   | Male    |              3 |        41258
- France   | Female  |              3 |        12738
- France   | Unknown |              3 |           50
- France   | Male    |              4 |        19777
+nom_pays |  sexe  | indice_gravite 
+----------+--------+----------------
+ France   | Male   |            141
+ France   | Female |            126
+ France   | Male   |             78
+ France   | Male   |             67
+ France   | Male   |             64
+ France   | Male   |             51
+ France   | Male   |             48
+ France   | Female |             48
+ France   | Male   |             46
+ France   | Male   |             43
 (10 rows)
 
- 
  conditions | est_jour_ferie | nb_accidents | gravite_moyenne 
 ------------+----------------+--------------+-----------------
  ensoleille | t              |         3644 |            2.11
