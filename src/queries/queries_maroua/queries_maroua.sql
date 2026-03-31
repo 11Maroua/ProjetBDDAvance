@@ -1,4 +1,7 @@
 -- Requêtes Maroua —-
+SELECT *
+FROM dim_temps
+LIMIT 10;
 
 -- 1. Gravité moyenne des accidents selon les conditions météo et le pays
 SELECT 
