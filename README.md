@@ -152,14 +152,15 @@ psql -U postgres -d accidents_db
 ```bash
 psql -U postgres -d accidents_db -f src/indexes/indexes.sql
 ```
+Les index créés accélèrent les jointures sur `FAIT_ACCIDENT` et `DIM_TEMPS`.
+Voir `src/indexes/analyze_impact_indexes.md` pour l'analyse complète de l'impact
 
 ## Étape 8 — Vues matérialisées
 ```bash
 psql -U postgres -d accidents_db -f src/materialized_views/mv.sql
 ```
+Voir `src/materialized_viexs/analyze_impact_mv.md` pour l'analyse complète de l'impact. 
 
-Les index créés accélèrent les jointures sur `FAIT_ACCIDENT` et `DIM_TEMPS`.
-Voir `src/indexes/analyze_impact_indexes.md` pour l'analyse complète de l'impact.
 ## Mise à jour de l'entrepôt
 
 La mise à jour de l'entrepôt suit un processus **incrémental** — on n'insère que les nouveaux enregistrements sans toucher aux données existantes.
