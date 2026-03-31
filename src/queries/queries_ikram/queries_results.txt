@@ -1,0 +1,52 @@
+REQUÊTE 1 - Évolution du nombre d'accidents mortels par année et par pays
+
+annee | nom_pays       | nb_accidents_mortels
+------|----------------|---------------------
+2005  | France         | 5068
+2005  | United Kingdom | 2913
+2007  | France         | 4466
+2007  | United Kingdom | 2714
+2009  | France         | 4115
+2009  | United Kingdom | 2057
+2011  | France         | 3788
+2011  | United Kingdom | 1797
+2013  | France         | 3171
+2013  | United Kingdom | 1608
+2015  | France         | 3306
+2015  | United Kingdom | 1616
+2017  | France         | 3360
+2017  | United Kingdom | 1676
+2019  | France         | 3284
+2019  | United Kingdom | 1658
+2021  | France         | 3032
+2021  | United Kingdom | 1474
+
+REQUÊTE 2 - Gravité moyenne par année avec moyenne mobile sur 5 ans
+
+annee | nom_pays       | gravite_moyenne | moyenne_mobile_5_ans
+------|----------------|-----------------|---------------------
+2005  | France         | 1.03            | 1.03
+2005  | United Kingdom | 1.02            | 1.02
+2007  | France         | 1.03            | 1.03
+2007  | United Kingdom | 1.02            | 1.02
+2009  | France         | 1.03            | 1.03
+2009  | United Kingdom | 1.02            | 1.02
+2011  | France         | 1.03            | 1.03
+2011  | United Kingdom | 1.02            | 1.02
+2013  | France         | 1.03            | 1.03
+2013  | United Kingdom | 1.01            | 1.02
+2015  | France         | 1.03            | 1.03
+2015  | United Kingdom | 1.02            | 1.02
+2017  | France         | 1.03            | 1.03
+2017  | United Kingdom | 1.02            | 1.02
+2019  | France         | 1.02            | 1.03
+2019  | United Kingdom | 1.02            | 1.02
+2021  | France         | 1.02            | 1.03
+2021  | United Kingdom | 1.02            | 1.02
+
+REQUÊTE 3 - Température moyenne : jours avec vs sans accident mortel
+
+type_jour                  | temp_min_moyenne | temp_max_moyenne
+---------------------------|------------------|------------------
+Jour avec accident mortel  | 8.29             | 11.90
+Jour sans accident mortel  | 7.54             | 7.81

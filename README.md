@@ -148,7 +148,13 @@ python3 src/scripts_creation_fact_table/loaddb.py
 ```bash
 psql -U postgres -d accidents_db 
 ```
+## Étape 7 — Indexation et optimisation
+```bash
+psql -U postgres -d accidents_db -f src/indexes/indexes.sql
+```
 
+Les index créés accélèrent les jointures sur `FAIT_ACCIDENT` et `DIM_TEMPS`.
+Voir `src/indexes/analyze_impact_indexes.md` pour l'analyse complète de l'impact.
 ## Mise à jour de l'entrepôt
 
 La mise à jour de l'entrepôt suit un processus **incrémental** — on n'insère que les nouveaux enregistrements sans toucher aux données existantes.
