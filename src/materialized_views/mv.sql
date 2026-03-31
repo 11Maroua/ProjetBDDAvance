@@ -11,6 +11,7 @@ SELECT
     l.type_route,
     u.sexe,
     u.cat_usager,
+    v.type_vehicule
 
     -- Agrégats
     COUNT(*)                                 AS nb_accidents,
