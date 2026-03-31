@@ -1,6 +1,5 @@
 import pandas as pd
 import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
 import psycopg2
 
 # ─────────────────────────────────────────────────────────────
@@ -14,20 +13,21 @@ conn = psycopg2.connect(
 )
 
 # ─────────────────────────────────────────────────────────────
-# REQUÊTE 1 — Gravité moyenne par sexe et pays (sans LIMIT ni ROLLUP)
+# REQUÊTE 1 — Proportion d'accidents graves par sexe et pays
+# accidents graves = indice_gravite > 4
 # ─────────────────────────────────────────────────────────────
 q1 = """
     SELECT
         p.nom_pays,
         u.sexe,
-        ROUND(AVG(f.indice_gravite)::numeric, 2) AS gravite_moyenne,
-        COUNT(DISTINCT f.id_accident)             AS nb_accidents
+        COUNT(DISTINCT f.id_accident) AS nb_accidents_graves
     FROM FAIT_ACCIDENT f
     JOIN DIM_PAYS   p ON p.id_pays   = f.id_pays
     JOIN DIM_USAGER u ON u.id_usager = f.id_usager
     WHERE u.sexe IN ('Male', 'Female')
+      AND f.indice_gravite > 4
     GROUP BY p.nom_pays, u.sexe
-    ORDER BY p.nom_pays, gravite_moyenne DESC;
+    ORDER BY p.nom_pays, u.sexe;
 """
 df1 = pd.read_sql(q1, conn)
 
@@ -50,55 +50,45 @@ df2 = pd.read_sql(q2, conn)
 conn.close()
 
 # ─────────────────────────────────────────────────────────────
-# FIGURE 1 — Gravité moyenne par sexe et pays
-# But : montrer que les hommes ont des accidents plus graves
+# FIGURE 1 — Camemberts proportion accidents graves Homme vs Femme
 # ─────────────────────────────────────────────────────────────
-fig, axes = plt.subplots(1, 2, figsize=(12, 5), sharey=False)
+fig, axes = plt.subplots(1, 2, figsize=(12, 6))
 fig.patch.set_facecolor("#ffffff")
-fig.suptitle("Les hommes sont-ils responsables d'accidents plus graves ?",
-             fontsize=14, fontweight="bold", color="#2C2C2A", y=1.02)
+fig.suptitle("Proportion d'accidents graves : Hommes vs Femmes",
+             fontsize=15, fontweight="bold", color="#2C2C2A", y=0.98)
 
-couleurs = {"Male": "#E05C5C", "Female": "#5B9BD5"}
+couleurs = ["#E8813A", "#2ECC9A"]  # orange = Male, vert = Female
 
 for ax, pays in zip(axes, ["France", "Royaume-Uni"]):
-    subset = df1[df1["nom_pays"] == pays].sort_values("gravite_moyenne", ascending=True)
-    bars = ax.barh(
-        subset["sexe"],
-        subset["gravite_moyenne"],
-        color=[couleurs[s] for s in subset["sexe"]],
-        edgecolor="white",
-        height=0.5
+    subset = df1[df1["nom_pays"] == pays].set_index("sexe")
+    valeurs = [
+        subset.loc["Male",   "nb_accidents_graves"] if "Male"   in subset.index else 0,
+        subset.loc["Female", "nb_accidents_graves"] if "Female" in subset.index else 0,
+    ]
+    labels  = ["Hommes", "Femmes"]
+    total   = sum(valeurs)
+
+    wedges, texts, autotexts = ax.pie(
+        valeurs,
+        labels=labels,
+        colors=couleurs,
+        autopct="%1.1f%%",
+        startangle=90,
+        pctdistance=0.75,
+        wedgeprops=dict(edgecolor="white", linewidth=2),
+        explode=(0.05, 0),   # légère mise en avant des hommes
     )
-    # Valeurs dans les barres
-    for bar, val in zip(bars, subset["gravite_moyenne"]):
-        ax.text(val - 0.02, bar.get_y() + bar.get_height() / 2,
-                f"{val:.2f}", ha="right", va="center",
-                fontsize=13, fontweight="bold", color="white")
 
-    # Différence en annotation
-    vals = subset.set_index("sexe")["gravite_moyenne"]
-    if "Male" in vals and "Female" in vals:
-        diff = vals["Male"] - vals["Female"]
-        ax.annotate(f"Écart : +{diff:.2f} pour les hommes",
-                    xy=(vals["Male"], 1),
-                    xytext=(vals["Male"] * 0.5, 1.35),
-                    fontsize=9, color="#E05C5C",
-                    arrowprops=dict(arrowstyle="->", color="#E05C5C", lw=1.2))
+    for text in texts:
+        text.set_fontsize(12)
+        text.set_color("#2C2C2A")
+    for autotext in autotexts:
+        autotext.set_fontsize(12)
+        autotext.set_fontweight("bold")
+        autotext.set_color("white")
 
-    ax.set_title(pays, fontsize=12, fontweight="bold", color="#2C2C2A")
-    ax.set_xlabel("Gravité moyenne (indice)", fontsize=10, color="#5F5E5A")
-    ax.set_xlim(0, df1["gravite_moyenne"].max() * 1.2)
-    ax.set_facecolor("#ffffff")
-    ax.spines["top"].set_visible(False)
-    ax.spines["right"].set_visible(False)
-    ax.spines["left"].set_color("#D3D1C7")
-    ax.spines["bottom"].set_color("#D3D1C7")
-    ax.tick_params(colors="#888780")
-    ax.grid(axis="x", color="#D3D1C7", linewidth=0.5, linestyle="--")
-
-patches = [mpatches.Patch(color=couleurs[s], label=s) for s in ["Male", "Female"]]
-fig.legend(handles=patches, fontsize=10, framealpha=0,
-           loc="lower center", ncol=2, bbox_to_anchor=(0.5, -0.05))
+    ax.set_title(f"{pays}\n({total:,} accidents graves)",
+                 fontsize=12, fontweight="bold", color="#2C2C2A", pad=16)
 
 plt.tight_layout(pad=2.0)
 plt.savefig("docs/images/gravite_sexe_pays.png", dpi=150, bbox_inches="tight")
@@ -137,7 +127,7 @@ for i, jour in enumerate(jours):
 ax2.set_xticks(list(x))
 ax2.set_xticklabels(conditions, fontsize=11)
 ax2.set_ylabel("Gravité moyenne (indice)", fontsize=11, color="#5F5E5A")
-ax2.set_title("Gravité des accidents selon les conditions météo\net les jours fériés",
+ax2.set_title("Gravité des accidents selon les conditions météo et les jours fériés",
               fontsize=13, fontweight="bold", color="#2C2C2A", pad=14)
 ax2.set_facecolor("#ffffff")
 ax2.spines["top"].set_visible(False)
