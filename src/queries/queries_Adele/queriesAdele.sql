@@ -20,7 +20,6 @@ SELECT
 FROM FAIT_ACCIDENT  f
     JOIN DIM_TEMPS t ON t.date = f.date
     JOIN DIM_METEO m ON m.id_pays = f.id_pays AND m.date = f.date
-WHERE t.est_jour_ferie IS true
-GROUP BY (m.conditions)
+GROUP BY (m.conditions, t.est_jour_ferie)
 
 ORDER BY gravite_moyenne DESC;
