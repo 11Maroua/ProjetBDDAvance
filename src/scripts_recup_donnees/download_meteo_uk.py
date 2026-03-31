@@ -10,8 +10,8 @@ os.makedirs(RAW_DIR, exist_ok=True)
 
 ANNEES_CIBLES = [2005, 2007, 2009, 2011, 2013, 2015, 2017, 2019, 2021]
 
-KAGGLE_USERNAME = "11Maroua"
-KAGGLE_KEY      = "KGAT_c2c337169be42000c5d86abba851f6b7"
+KAGGLE_USERNAME = os.environ.get("KAGGLE_USERNAME")
+KAGGLE_KEY      = os.environ.get("KAGGLE_KEY")
 DATASET         = "robjbutlermei/uk-daily-weather-1961-2024"
 
 # ------------------------------------------------------------

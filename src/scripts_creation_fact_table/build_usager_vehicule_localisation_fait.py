@@ -37,7 +37,6 @@ from pyproj import Transformer
 # CONFIGURATION
 # ─────────────────────────────────────────────────────────────
 RAW_DIR         = "./data/raw"
-DIM_SOURCE_DIR  = "./data/processed"          # existing dim_meteo.csv and DIM_TEMPS.csv
 OUTPUT_DIR      = "./data/dims"     # all output CSVs go here
 YEARS           = [2005, 2007, 2009, 2011, 2013, 2015, 2017, 2019, 2021]
 
@@ -414,7 +413,7 @@ def process_uk_year(year):
             "departement":    None,
             "district":       str(row.get("local_authority_ons_district", ""))[:50] or None,
             "type_route":     decode(row.get("first_road_class"), UK_ROAD),
-            "vitesse_limite": safe_int(row.get("speed_limit")),
+            "vitesse_limite": round(safe_int(row.get("speed_limit")) * 1.60934) if safe_int(row.get("speed_limit")) else None,
             "latitude":       round(float(row["latitude"]),  6) if pd.notna(row.get("latitude"))  else None,
             "longitude":      round(float(row["longitude"]), 6) if pd.notna(row.get("longitude")) else None,
         })
