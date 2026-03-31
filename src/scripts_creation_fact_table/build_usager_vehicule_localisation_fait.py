@@ -1,7 +1,7 @@
 """
-build_dims_and_fait.py
+build_usager_vehicule_localisation_fait.py
 ======================
-Builds all dimension CSVs and fait_accident.csv in one pass
+Builds 3 dimension CSVs and fait_accident.csv in one pass
 from raw accident files, ensuring IDs are consistent throughout.
 
 Output files (written to OUTPUT_DIR):
@@ -23,7 +23,7 @@ UK files (one per year, produced by download_uk.py):
 
 Usage:
   pip install pandas pyproj
-  python build_dims_and_fait.py
+  python build_usager_vehicule_localisation_fait.py
 """
 
 import os
