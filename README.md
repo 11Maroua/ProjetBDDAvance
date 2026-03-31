@@ -59,7 +59,7 @@ ProjetBDDAvance/
 ---
 ## Schéma de l'entrepot
 
-![Schéma étoile](docs/images/schema_etoile.png)
+![Schéma étoile](docs/images/schema_etoile.jpeg)
 
 ---
 
