@@ -1,5 +1,44 @@
-ÉTAPE 1 — EXPLAIN ANALYZE SANS INDEX (exécuté avant la création des index)
-Requête : Évolution du nombre d'accidents mortels par année et par pays
+PARTIE 1 — Requête SÉLECTIVE (France, année 2019)
+Montre l'impact MAXIMAL des index
+
+--- ÉTAPE 1 : SANS INDEX ---
+Execution Time: 733.931 ms
+
+Finalize Aggregate (actual time=732.957..733.898 rows=1 loops=1)
+  Buffers: shared hit=58 read=43861
+  ->  Parallel Seq Scan on fait_accident f
+        Filter: ((nb_tues > 0) AND (id_pays = 1))
+        Rows Removed by Filter: 631659
+        Buffers: shared read=43832
+  ->  Seq Scan on dim_temps t
+        Filter: (annee = 2019)
+        Rows Removed by Filter: 2920
+Planning Time: 4.417 ms
+Execution Time: 733.931 ms
+
+--- ÉTAPE 2 : AVEC INDEX ---
+Execution Time: 31.133 ms
+
+Finalize Aggregate (actual time=29.794..31.078 rows=1 loops=1)
+  Buffers: shared hit=7476
+  ->  Parallel Bitmap Heap Scan on fait_accident f
+        Recheck Cond: (id_pays = 1)
+        Filter: (nb_tues > 0)
+        ->  Bitmap Index Scan on idx_fait_accident_id_pays
+              Index Cond: (id_pays = 1)
+  ->  Index Scan using idx_dim_temps_annee on dim_temps t
+        Index Cond: (annee = 2019)
+  ->  Index Only Scan using dim_pays_pkey on dim_pays p
+        Index Cond: (id_pays = 1)
+Planning Time: 0.387 ms
+Execution Time: 31.133 ms
+
+
+PARTIE 2 — Requête PEU SÉLECTIVE (toutes années, tous pays)
+Montre les limites de l'indexation
+
+--- ÉTAPE 1 : SANS INDEX ---
+Execution Time: 717.696 ms
 
 Finalize GroupAggregate  (cost=55372.89..55926.43 rows=1800 width=230) (actual time=717.010..717.337 rows=18.00 loops=1)
   Group Key: t.annee, p.nom_pays
@@ -11,41 +50,24 @@ Finalize GroupAggregate  (cost=55372.89..55926.43 rows=1800 width=230) (actual t
         ->  Sort  (cost=54372.87..54377.37 rows=1800 width=230) (actual time=707.706..707.708 rows=18.00 loops=3)
               Sort Key: t.annee, p.nom_pays
               Sort Method: quicksort  Memory: 25kB
-              Buffers: shared hit=1124 read=42825
-              Worker 0:  Sort Method: quicksort  Memory: 25kB
-              Worker 1:  Sort Method: quicksort  Memory: 25kB
               ->  Partial HashAggregate  (cost=54257.55..54275.55 rows=1800 width=230) (actual time=707.682..707.690 rows=18.00 loops=3)
                     Group Key: t.annee, p.nom_pays
                     Batches: 1  Memory Usage: 65kB
-                    Buffers: shared hit=1094 read=42825
-                    Worker 0:  Batches: 1  Memory Usage: 65kB
-                    Worker 1:  Batches: 1  Memory Usage: 65kB
-                    ->  Hash Join  (cost=118.21..54104.26 rows=20438 width=222) (actual time=4.547..705.320 rows=17034.33 loops=3)
-                          Hash Cond: (f.id_pays = p.id_pays)
-                          Buffers: shared hit=1094 read=42825
-                          ->  Hash Join  (cost=101.91..54033.50 rows=20438 width=8) (actual time=4.178..703.033 rows=17034.33 loops=3)
-                                Hash Cond: (f.date = t.date)
-                                Buffers: shared hit=1092 read=42824
-                                ->  Parallel Seq Scan on fait_accident f  (cost=0.00..53877.87 rows=20438 width=8) (actual time=1.818..696.850 rows=17034.33 loops=3)
+                    ->  Hash Join  Hash Cond: (f.id_pays = p.id_pays) (actual time=4.547..705.320 rows=17034.33 loops=3)
+                          ->  Hash Join  Hash Cond: (f.date = t.date) (actual time=4.178..703.033 rows=17034.33 loops=3)
+                                ->  Parallel Seq Scan on fait_accident f
                                       Filter: (nb_tues > 0)
                                       Rows Removed by Filter: 625822
                                       Buffers: shared hit=1036 read=42796
-                                ->  Hash  (cost=60.85..60.85 rows=3285 width=8) (actual time=2.199..2.199 rows=3285.00 loops=3)
-                                      Buckets: 4096  Batches: 1  Memory Usage: 161kB
+                                ->  Seq Scan on dim_temps t
                                       Buffers: shared hit=56 read=28
-                                      ->  Seq Scan on dim_temps t  (cost=0.00..60.85 rows=3285 width=8) (actual time=0.229..1.919 rows=3285.00 loops=3)
-                                            Buffers: shared hit=56 read=28
-                          ->  Hash  (cost=12.80..12.80 rows=280 width=222) (actual time=0.358..0.359 rows=2.00 loops=3)
-                                Buckets: 1024  Batches: 1  Memory Usage: 9kB
+                          ->  Seq Scan on dim_pays p
                                 Buffers: shared hit=2 read=1
-                                ->  Seq Scan on dim_pays p  (cost=0.00..12.80 rows=280 width=222) (actual time=0.354..0.354 rows=2.00 loops=3)
-                                      Buffers: shared hit=2 read=1
-Planning:
-  Buffers: shared hit=217 read=14
 Planning Time: 6.515 ms
 Execution Time: 717.696 ms
 
-ÉTAPE 3 — EXPLAIN ANALYZE AVEC INDEX (exécuté après la création des index)
+--- ÉTAPE 3 : AVEC INDEX ---
+Execution Time: 607.921 ms
 
 Finalize GroupAggregate  (cost=55371.62..55925.16 rows=1800 width=230) (actual time=606.773..607.859 rows=18.00 loops=1)
   Group Key: t.annee, p.nom_pays
@@ -54,39 +76,17 @@ Finalize GroupAggregate  (cost=55371.62..55925.16 rows=1800 width=230) (actual t
         Workers Planned: 2
         Workers Launched: 2
         Buffers: shared hit=1814 read=42135
-        ->  Sort  (cost=54371.60..54376.10 rows=1800 width=230) (actual time=592.462..592.464 rows=18.00 loops=3)
-              Sort Key: t.annee, p.nom_pays
-              Sort Method: quicksort  Memory: 25kB
-              Buffers: shared hit=1814 read=42135
-              Worker 0:  Sort Method: quicksort  Memory: 25kB
-              Worker 1:  Sort Method: quicksort  Memory: 25kB
-              ->  Partial HashAggregate  (cost=54256.28..54274.28 rows=1800 width=230) (actual time=592.441..592.448 rows=18.00 loops=3)
-                    Group Key: t.annee, p.nom_pays
-                    Batches: 1  Memory Usage: 65kB
-                    Buffers: shared hit=1784 read=42135
-                    Worker 0:  Batches: 1  Memory Usage: 65kB
-                    Worker 1:  Batches: 1  Memory Usage: 65kB
-                    ->  Hash Join  (cost=118.21..54103.01 rows=20436 width=222) (actual time=4.054..590.030 rows=17034.33 loops=3)
-                          Hash Cond: (f.id_pays = p.id_pays)
-                          Buffers: shared hit=1784 read=42135
-                          ->  Hash Join  (cost=101.91..54032.25 rows=20436 width=8) (actual time=4.025..588.160 rows=17034.33 loops=3)
-                                Hash Cond: (f.date = t.date)
-                                Buffers: shared hit=1781 read=42135
-                                ->  Parallel Seq Scan on fait_accident f  (cost=0.00..53876.62 rows=20436 width=8) (actual time=3.652..583.942 rows=17034.33 loops=3)
+        ->  Sort  Sort Key: t.annee, p.nom_pays  Sort Method: quicksort (actual time=592.462..592.464 rows=18.00 loops=3)
+              ->  Partial HashAggregate  Group Key: t.annee, p.nom_pays (actual time=592.441..592.448 rows=18.00 loops=3)
+                    ->  Hash Join  Hash Cond: (f.id_pays = p.id_pays) (actual time=4.054..590.030 rows=17034.33 loops=3)
+                          ->  Hash Join  Hash Cond: (f.date = t.date) (actual time=4.025..588.160 rows=17034.33 loops=3)
+                                ->  Parallel Seq Scan on fait_accident f
                                       Filter: (nb_tues > 0)
                                       Rows Removed by Filter: 625822
                                       Buffers: shared hit=1697 read=42135
-                                ->  Hash  (cost=60.85..60.85 rows=3285 width=8) (actual time=0.365..0.365 rows=3285.00 loops=3)
-                                      Buckets: 4096  Batches: 1  Memory Usage: 161kB
+                                ->  Seq Scan on dim_temps t
                                       Buffers: shared hit=84
-                                      ->  Seq Scan on dim_temps t  (cost=0.00..60.85 rows=3285 width=8) (actual time=0.019..0.191 rows=3285.00 loops=3)
-                                            Buffers: shared hit=84
-                          ->  Hash  (cost=12.80..12.80 rows=280 width=222) (actual time=0.024..0.025 rows=2.00 loops=3)
-                                Buckets: 1024  Batches: 1  Memory Usage: 9kB
+                          ->  Seq Scan on dim_pays p
                                 Buffers: shared hit=3
-                                ->  Seq Scan on dim_pays p  (cost=0.00..12.80 rows=280 width=222) (actual time=0.021..0.022 rows=2.00 loops=3)
-                                      Buffers: shared hit=3
-Planning:
-  Buffers: shared hit=29 read=8
 Planning Time: 7.205 ms
 Execution Time: 607.921 ms

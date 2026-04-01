@@ -1,4 +1,37 @@
--- ÉTAPE 1 : EXPLAIN ANALYZE SANS index (AVANT la création des index)
+-- PARTIE 1 : Requête sélective (France, 2019)
+-- Montre l'impact MAXIMAL des index sur une requête ciblée
+
+-- SANS index
+SET enable_indexscan = OFF;
+SET enable_bitmapscan = OFF;
+
+EXPLAIN ANALYZE
+SELECT COUNT(*) AS nb_accidents_mortels
+FROM fait_accident f
+JOIN dim_temps t ON f.date = t.date
+JOIN dim_pays p ON f.id_pays = p.id_pays
+WHERE f.nb_tues > 0
+AND t.annee = 2019
+AND f.id_pays = 1;
+
+-- AVEC index
+SET enable_indexscan = ON;
+SET enable_bitmapscan = ON;
+
+EXPLAIN ANALYZE
+SELECT COUNT(*) AS nb_accidents_mortels
+FROM fait_accident f
+JOIN dim_temps t ON f.date = t.date
+JOIN dim_pays p ON f.id_pays = p.id_pays
+WHERE f.nb_tues > 0
+AND t.annee = 2019
+AND f.id_pays = 1;
+
+-- PARTIE 2 : Les limites de l'indexation
+-- Requête peu sélective (toutes années, tous pays)
+-- PostgreSQL préfère le Seq Scan parallélisé
+
+-- ÉTAPE 1 : EXPLAIN ANALYZE SANS index
 EXPLAIN ANALYZE
 SELECT
     t.annee,
@@ -22,7 +55,7 @@ CREATE INDEX IF NOT EXISTS idx_fait_accident_id_usager   ON fait_accident(id_usa
 CREATE INDEX IF NOT EXISTS idx_fait_accident_id_vehicule ON fait_accident(id_vehicule);
 CREATE INDEX IF NOT EXISTS idx_fait_accident_date        ON fait_accident(date);
 
--- ÉTAPE 3 : EXPLAIN ANALYZE AVEC index (APRÈS la création des index)
+-- ÉTAPE 3 : EXPLAIN ANALYZE AVEC index
 EXPLAIN ANALYZE
 SELECT
     t.annee,
