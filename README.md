@@ -161,6 +161,23 @@ psql -U postgres -d accidents_db -f src/materialized_views/mv.sql
 ```
 Voir `src/materialized_viexs/analyze_impact_mv.md` pour l'analyse complète de l'impact. 
 
+## Étape 9 - Contrôle d'accès
+
+Chaque rôle a accès aux différentes tables selon le tableau suivant.
+De plus nous avons activé le Row Security Level sur toutes les tables de notre entrpôt et utilisé une fonction pour faire en sorte que chaque personne accédant à l'entrepôt n'ai accès qu'aux lignes correspondant à son pays d'origine.
+
+| Table | ADMIN_USER | MEDECIN | POLICIER | ADMIN_GLOBAL |
+|---|---|---|---|---|
+| `FAIT_ACCIDENT` | SELECT | SELECT | SELECT | Tout |
+| `DIM_LOCALISATION` | X | SELECT | SELECT | Tout |
+| `DIM_USAGER` | X | SELECT | SELECT | Tout |
+| `DIM_VEHICULE` | X  | X | SELECT | Tout |
+| `DIM_TEMPS` | X | SELECT | SELECT | Tout |
+| `DIM_PAYS` | SELECT | SELECT | SELECT | Tout |
+| `DIM_METEO` | X | SELECT | SELECT | Tout |
+| `UTILISATEUR_PAYS` | Ligne propre | Ligne propre | Ligne propre | Tout |
+
+
 ## Mise à jour de l'entrepôt
 
 La mise à jour de l'entrepôt suit un processus **incrémental** — on n'insère que les nouveaux enregistrements sans toucher aux données existantes.
