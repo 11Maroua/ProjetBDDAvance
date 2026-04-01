@@ -43,12 +43,9 @@ GRANT SELECT ON dim_localisation     TO POLICIER;
 
 -- User1 et User2
 GRANT SELECT ON fait_accident        TO USER1, USER2;
-GRANT SELECT ON dim_usager           TO USER1, USER2;
-GRANT SELECT ON dim_vehicule         TO USER1, USER2;
-GRANT SELECT ON dim_localisation     TO USER1, USER2;
-GRANT SELECT ON dim_meteo            TO USER1, USER2;
 GRANT SELECT ON dim_temps            TO USER1, USER2;
 GRANT SELECT ON dim_pays             TO USER1, USER2;
+GRANT SELECT ON dim_localisation     TO USER1, USER2;
 
 -- Admin user
 GRANT SELECT ON fait_accident        TO ADMIN_USER;
