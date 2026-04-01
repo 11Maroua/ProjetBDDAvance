@@ -1,19 +1,22 @@
 import requests
 import os
 import zipfile
+from dotenv import load_dotenv
+
 
 # ------------------------------------------------------------
 # Configuration
 # ------------------------------------------------------------
+load_dotenv()
+
 RAW_DIR = "data/raw/meteo_uk"
 os.makedirs(RAW_DIR, exist_ok=True)
 
 ANNEES_CIBLES = [2005, 2007, 2009, 2011, 2013, 2015, 2017, 2019, 2021]
 
-KAGGLE_USERNAME = os.environ.get("KAGGLE_USERNAME")
-KAGGLE_KEY      = os.environ.get("KAGGLE_KEY")
+KAGGLE_USERNAME = os.getenv("KAGGLE_USERNAME")
+KAGGLE_KEY      = os.getenv("KAGGLE_KEY")
 DATASET         = "robjbutlermei/uk-daily-weather-1961-2024"
-
 # ------------------------------------------------------------
 # Telechargement via API Kaggle (sans librairie kaggle)
 # ------------------------------------------------------------
