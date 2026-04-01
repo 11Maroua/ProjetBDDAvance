@@ -22,28 +22,47 @@ ProjetBDDAvance/
 │   └── raw/           ← données brutes (ignorées par git à générer avec scripts création recup_données)
 ├── docs/
 │   ├── guides/
-│   │   ├── guide_colonnesSources_vers_Dimensions.md
+│   │   ├── guide_colonnes_sources_vers_dimensions.md
 │   │   └── guide_generation_table_fait.md
 │   └── images/
+│       ├── evolutionaccidents.png
+│       ├── gravite_meteo_ferie.png
+│       ├── gravite_sexe_pays.png
+│       ├── impact_vues_materialisees.png
+│       ├── proportion_sexe_pays.png
 │       └── schema_etoile.png
 ├── src/
 │   ├── control_access/
 │   │   ├── controles_acces.sql
-│   │   └── tests_rls.txt
+│   │   └── tests_rls.
+│   ├── indexes/
+│   │   ├── analyze_impact_indexes.md
+│   │   ├── analyze_impact_indexes.txt
+│   │   ├── indexes_requests.sql
+│   │   └── indexes.sql
 │   ├── materialized_views/
 │   │   ├── analyze_impact_mv.md
-│   │   ├── explain_analyze_results.txt
+│   │   ├── explain_analyze_mv.txt
 │   │   ├── mv_requests.sql
-│   │   └── mv.sql
+│   │   ├── mv.sql
+│   │   └── visualisation_vues.py
 │   ├── queries/
 │   │   ├── queries_Adele/
-│   │   ├── queries_Ikram/
+│   │   |   ├── queriesAdele.sql
+│   │   |   └── queriesAdele.txt
+│   │   ├── queries_ikram/
+│   │   |   ├── queries_ikram.sql
+│   │   |   └── queries_results.txt
 │   │   ├── queries_Lila/
-│   │   └── queries_Maroua/
+│   │   |   └── queriesLila.sql
+│   │   ├── queries_maroua/
+│   │   |   ├── queries_maroua.sql
+│   │   |   └── queries_results.txt
+│   │   └── visualisation_queries/
 │   ├── scripts_creation_fact_table/
 │   │   ├── build_entrepot.py
-│   │   ├── build_pays
-│   │   ├── build_temps
+│   │   ├── build_pays.py
+│   │   ├── build_temps.py
 │   │   ├── build_usager_vehicule_localisation_fait.py
 │   │   ├── loaddb.py
 │   │   └── preprocess_meteo.py
@@ -63,7 +82,7 @@ ProjetBDDAvance/
 
 ---
 
-## Sources de données
+## Sources des données
 
 | Source | Pays | Licence |
 |--------|------|---------|
@@ -96,13 +115,12 @@ Les fichiers sont téléchargés dans `data/raw/`.
 
 ## Étape 2 — Générer les fichiers de l'entrepôt
 
-Exécuter le script suivant pour générer toutes les dimensions ainsi que la table des faits. 
+Exécuter le script suivant pour générer toutes les dimensions ainsi que la table des faits.
 
 ```bash
 python3 src/scripts_creation_fact_table/build_entrepot.py
 ```
-
-Lit tous les fichiers de `data/raw/` et produit dans `data/dims/` :
+Ce script appelera automatiquement les autres scripts présents dans `src/scripts_creation_fact_table` pour lire tous les fichiers de `data/raw/` et produire les fichiers csv nécessaires dans `data/dims/` :
 
 | Fichier | Contenu |
 |---------|---------|
@@ -224,4 +242,4 @@ python3 src/scripts_creation_fact_table/loaddb.py
 ## Licence
 
 Ce projet est distribué sous **Licence Ouverte / Open Licence Version 2.0** .
-Toute réutilisation doit mentionner les sources originales listées dans la section **Sources de données**.
+Toute réutilisation doit mentionner les sources originales listées dans la section **Sources des données**.
